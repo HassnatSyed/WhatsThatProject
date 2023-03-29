@@ -2,19 +2,40 @@ import React, { Component } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 import LoginScreen from './components/login';
-//import FlatListDemo from './components/flatlistdemo';
+import SignupScreen from './components/signup';
+import HomeScreen from './tab/homeScreen';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
+
+const Stack = createNativeStackNavigator();
+//const Tab = createBottomTabNavigator();
 
 export default class App extends Component {
-  constructor(props){
-    super(props);
-  }
 
   render(){
+  
     return (
-      <View style={styles.container}>
+
+      <NavigationContainer initialRouteName = "Login" independent={true} >
+        <Stack.Navigator  screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="LoginScreen" component={LoginScreen} />
+          <Stack.Screen name="SignupScreen" component={SignupScreen} />
+          <Stack.Screen name="HomeScreen" component={HomeScreen} />
+          
+         
+        </Stack.Navigator>
+
+     
+
+      </NavigationContainer>
+
+
+
+     /* <View style={styles.container}>
         <LoginScreen />
-      </View>
-      // <FlatListDemo />
+      </View>*/
+      //<FlatListDemo />
     )
   }
 }

@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as EmailValidator from 'email-validator';
+import { loginAPI } from '../api/loginAPI';
+
+
+// 
 
 export default class LoginScreen extends Component {
 
@@ -13,10 +17,74 @@ export default class LoginScreen extends Component {
             password: "",
             error: "", 
             submitted: false
-        }
+        };
 
-        this._onPressButton = this._onPressButton.bind(this)
+         this._onPressButton = this._onPressButton.bind(this)
     }
+
+
+    login = () => {
+        loginAPI(this.state.email, this.state.password, ()=>{
+            console.log("navigate to homescreen");
+            this.props.navigation.navigate("HomeScreen");
+        },(error)=> {
+            console.log(error);
+            if (error.message == "400"){
+                console.log("error 400")
+            }
+            else {
+                console.log("try again")
+            }
+        })
+    }
+
+    /*login = () => {
+        // Validation here...
+        let toSend = {
+            email: this.state.email,
+            password: this.state.password
+        };
+        
+        fetch("http://localhost:3333/api/1.0.0/login", {
+            method: "post",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify(toSend),
+        })
+        .then((response) => {
+            if (response.status === 200) {
+            console.log("User logged in: ", response);
+            alert("Login successful!");
+            // Save user token or other relevant data
+            // Navigate to dashboard or home screen
+            } else {
+            console.log("Login failed: ", response);
+            alert("Invalid email or password");
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+    }*/
+
+    // async componentDidMount() {
+    //     try {
+    //       const response = await fetch("http://localhost:3333/api/1.0.0/user", {
+    //         method: "get",
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //           Authorization: `Bearer ${token}`, // Include user token in headers for authentication
+    //         },
+    //       });
+    //       const data = await response.json();
+    //       console.log("User data retrieved: ", data);
+    //       // Set user data in state or do other operations with it
+    //     } catch (error) {
+    //       console.log(error);
+    //     }
+    //   }
+
 
     _onPressButton(){
         this.setState({submitted: true})
@@ -44,7 +112,16 @@ export default class LoginScreen extends Component {
 
     }
 
+    loginProcess(){
+        if (this._onPressButton()){ 
+            this.login();
+            //this.props.navigation.navigate('ChatScreen');
+        }
+    }
+    
+
     render(){
+        const navigation = this.props.navigation;
         return (
             <View style={styles.container}>
 
@@ -82,8 +159,8 @@ export default class LoginScreen extends Component {
                         </>
                     </View>
             
-                    <View style={styles.loginbtn}>
-                        <TouchableOpacity onPress={this._onPressButton}>
+                    <View>
+                        <TouchableOpacity  style={styles.loginbtn} onPress={() => this.loginProcess()}>
                             <View style={styles.button}>
                                 <Text style={styles.buttonText}>Login</Text>
                             </View>
@@ -96,9 +173,15 @@ export default class LoginScreen extends Component {
                         }
                     </>
             
-                    <View>
+                    <View  >
+                        <TouchableOpacity 
+                        onPress={() => this.props.navigation.navigate('SignupScreen')}>
+                            
                         <Text style={styles.signup}>Need an account?</Text>
+                        
+                        </TouchableOpacity>
                     </View>
+                    
                 </View>
             </View>
         )
@@ -109,9 +192,11 @@ export default class LoginScreen extends Component {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      width: "80%",
+      width: "100%",
       alignItems: "stretch",
-      justifyContent: "center"
+      justifyContent: "center",
+      
+      padding:"10%"
     },
     formContainer: {
   
@@ -127,7 +212,8 @@ const styles = StyleSheet.create({
     },
     signup:{
       justifyContent: "center",
-      textDecorationLine: "underline"
+      textDecorationLine: "underline",
+      paddingTop: 0,
     },
     button: {
       marginBottom: 30,
