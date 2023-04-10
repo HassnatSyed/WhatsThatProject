@@ -80,6 +80,7 @@ export default class ContactScreen extends Component {
         
         <TouchableOpacity key = {index} onPress = {this._onPressButton} style={styles.contact}>
             <Text style = {styles.contactName}>{chat.first_name} {chat.last_name}</Text>
+            
         </TouchableOpacity>)
     })
     return(

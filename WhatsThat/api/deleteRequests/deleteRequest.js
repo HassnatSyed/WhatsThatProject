@@ -15,6 +15,10 @@ async function removeFriend(sessionID, contactID, success, failure) {
       if (response.status === 200) {
         success();
       } 
+      else if(response.status === 400) {
+        console.log("Cannot remove yourself as friend", response);
+        failure(new Error("400"));
+      }
       else if (response.status === 401) {
         console.log("Unauthorized! Please Login ", response);
         failure(new Error("401"));
@@ -49,6 +53,10 @@ async function removeFriend(sessionID, contactID, success, failure) {
       if (response.status === 200) {
         success();
       } 
+      else if(response.status === 400) {
+        console.log("Cannot unblock yourself", response);
+        failure(new Error("400"));
+      }
       else if (response.status === 401) {
         console.log("Unauthorized! Please Login ", response);
         failure(new Error("401"));

@@ -33,8 +33,8 @@ export default class LoginScreen extends Component {
     }
     checkLoggedIn = async () => {
       const value = await AsyncStorage.getItem("userToken")
-      if(value == null){
-        this.props.navigation.navigate("LoginScreen")
+      if(value != null){
+        this.props.navigation.navigate("HomeScreen")
       }
     }
 

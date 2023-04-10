@@ -119,7 +119,7 @@ async  function loginAPI  (email, password, success, failure)  {
                 failure(new Error("401"));
               }
               else if(response.status === 400) {
-                console.log("Cannot block yourself", response);
+                console.log("Cannot block yourself or users not in your contacts", response);
                 failure(new Error("400"));
               }
               else if(response.status === 404) {

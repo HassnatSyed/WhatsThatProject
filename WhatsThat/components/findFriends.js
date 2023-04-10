@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, FlatList  } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {searchAllUsers} from '../api/getRequests/getRequests';
-import { addFriend } from '../api/postRequests/postRequests';
+import {getBlockedUsers, searchAllUsers} from '../api/getRequests/getRequests';
+import { addFriend, blockUser } from '../api/postRequests/postRequests';
 import { getUserContacts } from '../api/getRequests/getRequests';
-import { removeFriend } from '../api/deleteRequests/deleteRequest';
+import { removeFriend, unblockUser } from '../api/deleteRequests/deleteRequest';
 
 
 
@@ -20,7 +20,9 @@ export default class FindFriends extends Component {
             contactData:[],
             currentID:"",
             firstView:true,
-            newFriends:[]
+            newFriends:[],
+            blockList:[],
+            newlyBlocked:[]
         };
     
         // this._onPressButton = this._onPressButton.bind(this)
@@ -29,7 +31,8 @@ export default class FindFriends extends Component {
       componentDidMount() {
             this.unsubscribe = this.props.navigation.addListener('focus', () => {
             this.checkLoggedIn();
-            this.retrieveData();
+            this.userContacts();
+            this.getBlockLists();
             this.setState({firstView: true})
           })
       }
@@ -58,6 +61,14 @@ export default class FindFriends extends Component {
     }
     isNewFriend = (item) => {
         return this.state.newFriends.some((friend) => friend.user_id === item.user_id);
+    }
+
+    isBlocked(item) {
+        console.log("runrunrunblock");
+        return this.state.blockList.some(blockedUser => blockedUser.user_id === item.user_id);
+    }
+    isNewlyBlocked = (item) => {
+        return this.state.newlyBlocked.some((newBlocked) => newBlocked.user_id === item.user_id);
     }
 
     findUsers = async () => {
@@ -111,7 +122,7 @@ export default class FindFriends extends Component {
             addFriend(userToken, item.user_id, ()=>{
               console.log(item.user_id, "the user id");
               this.setState({ isLoading: false });
-              // update contactData state with the new friend
+              // update newFriends state with the new friend
               this.setState(prevState => ({
                 //contactData: [...prevState.contactData, item], 
                 newFriends: [...prevState.newFriends, item] // add the new friend to the newFriends array
@@ -137,7 +148,7 @@ export default class FindFriends extends Component {
         //     return null; // Do not render the search result
         // }
         // else
-         if (this.isFriend(item) || this.currentID == item.user_id ) {
+         if (this.isFriend(item) || this.currentID == item.user_id  || this.isBlocked(item) ) {
             console.log(item),"testing";
             return null; // Do not render the search result
                     
@@ -148,13 +159,14 @@ export default class FindFriends extends Component {
                 <View style={styles.buttonContainer}>
                     {this.isNewFriend(item) ? (
                         <TouchableOpacity onPress={() => this.removeFromFriend(item)}>
-                            <Text style={styles.buttonText}>Remove Friend</Text>
+                            <Text style={styles.buttonText}> UnFriend</Text>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity onPress={() => this.addAsFriend(item)}>
                             <Text style={styles.buttonText}>Add Friend</Text>
                         </TouchableOpacity>
                     )}
+                   
                 </View>
             </View>
         );
@@ -170,7 +182,7 @@ export default class FindFriends extends Component {
             removeFriend(userToken, item.user_id, ()=>{
               console.log(item.user_id, "the user id");
               this.setState({ isLoading: false });
-              // update contactData state with the new friend
+              // update newFriends state by  removing friend
               this.setState(prevState => ({
                 //contactData: [...prevState.contactData, item],
                 newFriends: prevState.newFriends.filter(friend => friend.user_id !== item.user_id)// remove the item from the newFriends array
@@ -195,8 +207,8 @@ export default class FindFriends extends Component {
         console.log('Button clicked for user:', user);
         // do something with the user object
     }
-
-    retrieveData = async () => {
+//getting the current contact list
+    userContacts = async () => {
         try {
             const userToken = await AsyncStorage.getItem('userToken');
             const id = await AsyncStorage.getItem('userID');
@@ -215,6 +227,87 @@ export default class FindFriends extends Component {
         }
     };
 
+    //getting the current block list
+    getBlockLists = async () => {
+        try {
+            const userToken = await AsyncStorage.getItem('userToken');
+            const id = await AsyncStorage.getItem('userID');
+            this.currentID = await AsyncStorage.getItem('userID');
+            console.log(userToken, id);
+            // Do something with userToken and id
+            //alert("running")
+            getBlockedUsers(userToken, (blockList)=>{
+                console.log(blockList,"blocccccccck");
+                this.setState({ blockList, isLoading: false });
+                
+        })
+        } 
+        catch (error) {
+          console.log(error);
+        }
+    };
+
+    addToBlockList = async (item) => {
+        try {
+            const userToken = await AsyncStorage.getItem('userToken');
+            const id = await AsyncStorage.getItem('userID');
+            console.log(userToken, id);
+            // Do something with userToken and id
+            //alert("running")
+            blockUser(userToken, item.user_id, ()=>{
+              console.log(item.user_id, "the user id");
+              this.setState({ isLoading: false });
+              // update contactData state with the new friend
+              this.setState(prevState => ({
+                //contactData: [...prevState.contactData, item], 
+                newlyBlocked: [...prevState.newlyBlocked, item] // add the new friend to the newFriends array
+              }));
+              
+            },(error)=> {
+            console.log(error);
+            if (error.message == "400"){
+                console.log("error 400")
+            }
+            else {
+                console.log("try again")
+            }
+            })
+          } 
+          catch (error) {
+            console.log(error);
+          }
+    }
+
+    removeFromBlockList = async (item) => {
+        try {
+            const userToken = await AsyncStorage.getItem('userToken');
+            const id = await AsyncStorage.getItem('userID');
+            console.log(userToken, id);
+            // Do something with userToken and id
+            //alert("running")
+            unblockUser(userToken, item.user_id, ()=>{
+              console.log(item.user_id, "the user id");
+              this.setState({ isLoading: false });
+              // update newlyBlocked state by  unblocking user
+              this.setState(prevState => ({
+                //contactData: [...prevState.contactData, item],
+                newlyBlocked: prevState.newlyBlocked.filter(blockedUser => blockedUser.user_id !== item.user_id)// remove the item from the newFriends array
+              }));
+              
+            },(error)=> {
+            console.log(error);
+            if (error.message == "400"){
+                console.log("error 400")
+            }
+            else {
+                console.log("try again")
+            }
+            })
+          } 
+          catch (error) {
+            console.log(error);
+          }
+    }
 
     render(){
 
