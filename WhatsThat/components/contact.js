@@ -10,7 +10,7 @@ export default class ContactScreen extends Component {
     super(props);
 
     this.state = {
-        chatData :[],
+        contactData :[],
         isLoading: true
         
     };
@@ -42,9 +42,9 @@ export default class ContactScreen extends Component {
         console.log(userToken, id);
         // Do something with userToken and id
         //alert("running")
-        getUserContacts(userToken, (chatData)=>{
-          console.log(chatData);
-          this.setState({ chatData, isLoading: false });
+        getUserContacts(userToken, (contactData)=>{
+          console.log(contactData);
+          this.setState({ contactData, isLoading: false });
           
       })
       } 
@@ -54,8 +54,8 @@ export default class ContactScreen extends Component {
   };
 
   getContacts(){
-      getUserContacts(userToken, (chatData)=>{
-        console.log(chatData);
+      getUserContacts(userToken, (contactData)=>{
+        console.log(contactData);
 
       })
   }
@@ -75,7 +75,7 @@ export default class ContactScreen extends Component {
 
     }
 
-    const Contacts = this.state.chatData.map((chat,index) => {
+    const Contacts = this.state.contactData.map((chat,index) => {
       return( 
         
         <TouchableOpacity key = {index} onPress = {this._onPressButton} style={styles.contact}>

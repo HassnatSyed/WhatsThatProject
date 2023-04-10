@@ -11,7 +11,7 @@ export default class SignupScreen extends Component {
         this.state = {
             email: "",
             password: "",
-            confirmPassword: "",
+            //confirmPassword: "",
             error: "", 
             submitted: false,
             firstname: "",
@@ -78,15 +78,15 @@ export default class SignupScreen extends Component {
             return;
         }
         
-        if(!PASSWORD_REGEX.test(this.state.confirmPassword)){
-            this.setState({error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)"})
-            return;
-        }
+        // if(!PASSWORD_REGEX.test(this.state.confirmPassword)){
+        //     this.setState({error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)"})
+        //     return;
+        // }
         
-        if(confirmPassword != password){
-            this.setState({error: "Password do not match"})
-            return;
-        }
+        // if(confirmPassword != password){
+        //     this.setState({error: "Password do not match"})
+        //     return;
+        // }
 
 
         console.log("Button clicked: " + this.state.email + " " + this.state.password)
@@ -95,9 +95,9 @@ export default class SignupScreen extends Component {
     }
 
     signupPorcess(){
-        if(this._onPressButton()){
-            this.signup();
-        }
+        this._onPressButton()
+        this.signup();
+        
         
     }
     render(){
@@ -138,7 +138,7 @@ export default class SignupScreen extends Component {
                         </>
                     </View>
 
-                    <View style = {styles.password}>
+                    {/* <View style = {styles.password}>
                         <Text>Confirm Password</Text>
                         <TextInput
                             style={{height: 40, borderWidth: 1, width: "100%"}}
@@ -153,7 +153,7 @@ export default class SignupScreen extends Component {
                                 <Text style={styles.error}>*Password confirmation is required</Text>
                             }
                         </>
-                    </View>
+                    </View> */}
 
                     <View style = {styles.password}>
                         <Text>Firstname</Text>

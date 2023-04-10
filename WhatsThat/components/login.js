@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as EmailValidator from 'email-validator';
-import { loginAPI } from '../api/loginAPI';
+import { loginAPI } from '../api/postRequests/postRequests';
 
 
 // 

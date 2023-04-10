@@ -11,9 +11,9 @@ async function getUserContacts(sessionID, success) {
     })
       .then(async(response) => {
         if (response.status === 200) {
-          const chatData = await response.json();
-          success(chatData);
-          console.log(chatData);
+          const contactData = await response.json();
+          success(contactData);
+          console.log(contactData);
           //setIsLoading(false);
         } 
         else {
@@ -50,9 +50,9 @@ async function getUserContacts(sessionID, success) {
         });
     }
 
-    async function addFriend(sessionID, contactID, success) {
+    async function getBlockedUsers(sessionID, success) {
       console.log(sessionID);
-        fetch("http://localhost:3333/api/1.0.0/user/" +contactID + "/contact", {
+        fetch("http://localhost:3333/api/1.0.0/blocked", {
           method: "get",
           headers: {
             "Content-Type": "application/json",
@@ -61,20 +61,22 @@ async function getUserContacts(sessionID, success) {
         })
           .then(async(response) => {
             if (response.status === 200) {
-              const searchResult = await response.json();
-              success(searchResult);
-              console.log(searchResult);
+              const blockedList = await response.json();
+              success(blockedList);
+              console.log(blockedList);
               //setIsLoading(false);
             } 
             else {
-              console.log("Error fetching users: ", response);
+              console.log("Error fetching blocked List: ", response);
             }
           })
           .catch((error) => {
-            console.log("Error fetching users: ", error);
+            console.log("Error fetching blocked List: ", error);
           });
       }
+    
   export {
     getUserContacts,
-    searchAllUsers
+    searchAllUsers,
+    getBlockedUsers
   }
