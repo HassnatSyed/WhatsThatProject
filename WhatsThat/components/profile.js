@@ -134,7 +134,9 @@ export default class ProfileScreen extends Component {
 
         this.state = {
         userData: {},
-        imageUri: null
+        imageUri: null,
+        submitted: false,
+        error:"",
         }
     }
 
@@ -170,7 +172,7 @@ export default class ProfileScreen extends Component {
     //     const json = await response.json();
     //     this.setState({ imageUri: json.uri });
     // }
-    getImage = async (item) => {
+    getImage = async () => {
         try {
             const userToken = await AsyncStorage.getItem('userToken');
             const id = await AsyncStorage.getItem('userID');
@@ -201,7 +203,7 @@ export default class ProfileScreen extends Component {
     }
     
 
-    async logout () {
+    logout = async () => {
         console.log("Logout")
         
         return fetch("http://localhost:3333/api/1.0.0/logout", {
@@ -250,7 +252,7 @@ export default class ProfileScreen extends Component {
                     <Text style={styles.editButtonText}>Edit Profile</Text>
                 </TouchableOpacity>
                 <View style={styles.bottomButtons}>
-                    <TouchableOpacity style={styles.bottomButton} onPress={() => Alert.alert('Function 1')}>
+                    <TouchableOpacity style={styles.bottomButton} onPress={() => this.props.navigation.navigate("BlockedContacts")}>
                         <Text style={styles.bottomButtonText}>Blocked Contacts</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.bottomButton} onPress={() => Alert.alert('Function 2')}>
@@ -269,12 +271,12 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       alignItems: 'center',
-      padding: 20,
-      backgroundColor: '#fff',
+      justifyContent: 'center',
+      backgroundColor: '#F5F5F5',
     },
     profileImage: {
-      width: 250,
-      height: 250,
+      width: 150,
+      height: 150,
       borderRadius: 75,
       marginBottom: 20,
     },
@@ -284,49 +286,43 @@ const styles = StyleSheet.create({
       marginBottom: 10,
     },
     email: {
-      fontSize: 18,
-      marginBottom: 30,
+      fontSize: 16,
+      marginBottom: 20,
     },
     editButton: {
       backgroundColor: '#4CAF50',
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      padding: 10,
       borderRadius: 5,
       marginBottom: 20,
     },
     editButtonText: {
-      color: '#fff',
-      fontSize: 18,
+      color: 'white',
+      fontWeight: 'bold',
+      textAlign: 'center',
     },
     bottomButtons: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
-      paddingHorizontal: 40,
-      marginBottom: 30,
+      marginBottom: 20,
     },
     bottomButton: {
       backgroundColor: '#2196F3',
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      padding: 10,
       borderRadius: 5,
-      width: '45%',
+      marginRight: 10,
     },
     bottomButtonText: {
-      color: '#fff',
-      fontSize: 18,
+      color: 'white',
+      fontWeight: 'bold',
       textAlign: 'center',
     },
     logoutButton: {
-      backgroundColor: '#FF0000',
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      backgroundColor: '#F44336',
+      padding: 10,
       borderRadius: 5,
-      marginTop: 'auto',
     },
     logoutButtonText: {
-      color: '#fff',
-      fontSize: 18,
+      color: 'white',
+      fontWeight: 'bold',
+      textAlign: 'center',
     },
-  
-})
+  });

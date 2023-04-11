@@ -139,12 +139,12 @@ async function getUserContacts(sessionID, success) {
             let userImage = await response.blob();
             let image = URL.createObjectURL(userImage)
             success(image);
-            console.log(userData);
+           // console.log(userData);
             //setIsLoading(false);
           } 
         })
         .catch((error) => {
-          console.log("Error fetching profile image: ", error);
+          console.log("Error fetching profile image: ", error );
       });
        
     }

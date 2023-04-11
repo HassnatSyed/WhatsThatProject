@@ -143,34 +143,7 @@ export default class FindFriends extends Component {
           }
     }
     
-    renderSearchResult(item) {
-        // if (this.currentID === item.user_id && !firstView ) {
-        //     return null; // Do not render the search result
-        // }
-        // else
-         if (this.isFriend(item) || this.currentID == item.user_id  || this.isBlocked(item) ) {
-            console.log(item),"testing";
-            return null; // Do not render the search result
-                    
-        }
-        return (
-            <View style={styles.searchResult}>
-                <Text style={styles.userItem}>{item.given_name} {item.family_name}</Text>
-                <View style={styles.buttonContainer}>
-                    {this.isNewFriend(item) ? (
-                        <TouchableOpacity onPress={() => this.removeFromFriend(item)}>
-                            <Text style={styles.buttonText}> UnFriend</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity onPress={() => this.addAsFriend(item)}>
-                            <Text style={styles.buttonText}>Add Friend</Text>
-                        </TouchableOpacity>
-                    )}
-                   
-                </View>
-            </View>
-        );
-    }
+
     
     removeFromFriend = async (item) => {
         try {
@@ -309,15 +282,49 @@ export default class FindFriends extends Component {
           }
     }
 
+
+    renderSearchResult(item) {
+        // if (this.currentID === item.user_id && !firstView ) {
+        //     return null; // Do not render the search result
+        // }
+        // else
+         if (this.isFriend(item) || this.currentID == item.user_id  || this.isBlocked(item) ) {
+            console.log(item),"testing";
+            return null; // Do not render the search result
+                    
+        }
+        return (
+            <View style={styles.searchResult}>
+                <Text style={styles.userItem}>{item.given_name} {item.family_name}</Text>
+                <View style={styles.buttonContainer}>
+                    {this.isNewFriend(item) ? (
+                        <TouchableOpacity onPress={() => this.removeFromFriend(item)}>
+                            <Text style={styles.buttonText}> UnFriend</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity onPress={() => this.addAsFriend(item)}>
+                            <Text style={styles.buttonText}>Add Friend</Text>
+                        </TouchableOpacity>
+                    )}
+                   
+                </View>
+            </View>
+        );
+    }
+
+
     render(){
 
         return(
-            <View>
+            <View style ={styles.container}>
+                 <View style={styles.headerContainer}>
+                    <Text style={styles.header}>Find Friends</Text>
+                </View>
                 <View style={styles.password}>
                 <Text>Search Users:</Text>
                 <TextInput
                     style={{height: 40, borderWidth: 1, width: "100%"}}
-                    placeholder="Search Users"
+                    placeholder=" Search Users"
                     onChangeText={search => this.setState({search})}
                     defaultValue={this.state.search}
                     
@@ -360,132 +367,88 @@ export default class FindFriends extends Component {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      width: "100%",
-      alignItems: "stretch",
-      justifyContent: "center",
-      
-      padding:"10%"
+      backgroundColor: '#F8F9FB',
+      padding: 10,
     },
-    formContainer: {
-  
+    imageContainer: {
+      marginRight: 10,
     },
-    email:{
-      marginBottom: 5
+    contactImage: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
     },
-    password:{
+    // headerContainer: {
+    //   backgroundColor: '#4CAF50',
+    //   paddingHorizontal: 20,
+    //   paddingVertical: 10,
+    //   flexDirection: 'row',
+    //   justifyContent: 'space-between',
+    //   alignItems: 'center',
+    // },
+    // header: {
+    //   fontSize: 26,
+    //   fontWeight: 'bold',
+    //   color: '#FFFFFF',
+    // },
+    headerContainer: {
+        marginBottom: 20,
+      },
+      header: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#43464B',
+      },
+    searchResult: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 10,
+      padding: 20,
       marginBottom: 10,
-      marginLeft: 16,
-     justifyContent: "center",
-      marginRight: 16,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
-    loginbtn:{
-  
+    userItem: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#43464B',
     },
-    signup:{
-      justifyContent: "center",
-      textDecorationLine: "underline",
-      paddingTop: 0,
+    buttonContainer: {
+      backgroundColor: '#4CAF50',
+      borderRadius: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
     },
-    button: {
-      marginBottom: 5,
-      backgroundColor: '#2196F3'
+     buttonContainerRemoveFriend: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
     },
     buttonText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+    },
+    searchButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#2196F3',
+      padding: 10,
+      marginVertical: 10,
+      borderRadius: 5,
+    },
+    searchButtonText: {
+      fontSize: 18,
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+    },
+    noResultsText: {
       textAlign: 'center',
-      padding: 20,
-      color: 'white'
+      marginVertical: 10,
+      fontSize: 18,
+      color: '#666666',
     },
-    error: {
-        color: "red",
-        fontWeight: '900'
-    },
-
-    
-        search: {
-            padding: 16,
-            marginBottom: 3,
-            borderRadius: 5,
-            backgroundColor: "#fff",
-        },
-        searchButton: {
-            marginLeft: 16,
-            marginBottom: 16,
-            marginRight: 16,
-            backgroundColor: '#2196F3'
-        },
-       
-       
-        searchResult: {
-            padding: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: '#ccc'
-        },
-        searchResultText: {
-            fontSize: 16,
-            fontWeight: '500'
-        },
-    
-        container: {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 20,
-        },
-        userItem: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 10,
-            padding: 10,
-            borderRadius: 5,
-            backgroundColor: '#fff',
-           // width: '100%',
-        },
-        userName: {
-            fontWeight: 'bold',
-            fontSize: 18,
-            color: '#333',
-        },
-        buttonContainer: {
-            flexDirection: 'row',
-        },
-        searchButtonText: {
-            padding: 5,
-            color: '#fff',
-            backgroundColor: '#2196F3',
-            borderRadius: 5,
-           
-            textAlign: 'center',
-            
-            color: 'white',
-            fontSize: 16,
-            fontWeight: '500',
-        },
-    
-        searchResult: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: '#ccc',
-          },
-          userItem: {
-            flex: 1,
-            fontSize: 16,
-            fontWeight: 'bold',
-          },
-          buttonContainer: {
-            flexDirection: 'row',
-            alignItems: 'center',
-          },
-          buttonText: {
-            paddingHorizontal: 10,
-            paddingVertical: 5,
-            backgroundColor: '#ccc',
-            borderRadius: 5,
-            marginHorizontal: 5,
-          },
-    
   });
+  
+  

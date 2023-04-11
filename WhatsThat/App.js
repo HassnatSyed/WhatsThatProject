@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import ProfileScreen from './components/profile';
+import BlockedContacts from './components/blockedContacts';
 
 const Stack = createNativeStackNavigator();
 //const Tab = createBottomTabNavigator();
@@ -24,6 +25,7 @@ export default class App extends Component {
           <Stack.Screen name="SignupScreen" component={SignupScreen} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+          {/* <Stack.Screen name="BlockedContacts" component={BlockedContacts} /> */}
           
          
         </Stack.Navigator>
