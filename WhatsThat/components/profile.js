@@ -141,9 +141,14 @@ export default class ProfileScreen extends Component {
     }
 
     componentDidMount() {
+        this.unsubscribe = this.props.navigation.addListener('focus', () => {
         this.getUserData();
         this.getImage();
+        })
     }
+    componentWillUnmount(){
+        this.unsubscribe()
+      }
 
     getUserData = async () => {
         const userToken = await AsyncStorage.getItem('userToken');
@@ -248,7 +253,7 @@ export default class ProfileScreen extends Component {
                 )}
                 <Text style={styles.name}>{userData.first_name} {userData.last_name}</Text>
                 <Text style={styles.email}>{userData.email}</Text>
-                <TouchableOpacity style={styles.editButton}>
+                <TouchableOpacity style={styles.editButton} onPress={() => this.props.navigation.navigate("EditProfile")}>
                     <Text style={styles.editButtonText}>Edit Profile</Text>
                 </TouchableOpacity>
                 <View style={styles.bottomButtons}>

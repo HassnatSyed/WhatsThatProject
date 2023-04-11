@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as EmailValidator from 'email-validator';
-import { signUpAPI } from '../api/postRequests/postRequests';
+import { patchUserDetails } from '../api/patchRequests/patchRequests';
 
-export default class SignupScreen extends Component {
+export default class EditProfile extends Component {
 
     constructor(props){
         super(props);
@@ -23,48 +23,30 @@ export default class SignupScreen extends Component {
         this._onPressButton = this._onPressButton.bind(this)
     }
 
-     signup = () => {
-        signUpAPI(this.state.firstname,this.state.lastname,this.state.email, this.state.password, ()=>{
-            console.log("navigate to homescreen");
-            this.props.navigation.navigate("LoginScreen");
-        },(error)=> {
-            console.log(error);
-            if (error.message == "400"){
-                console.log("error 400")
-            }
-            else {
-                console.log("try again")
-            }
-        })
-    }
-//     signup = () =>{
-//   // Validation here...
-//     let toSend = {
-//         first_name: this.state.firstname,
-//         last_name: this.state.lastname,
-//         email: this.state.email,
-//         password: this.state.password
+   //IF PASSWORD IS CHANGED LOG USER OUT, IF EMAIL IS CHANGED LOG USER OUT---- MAYBE NOT NEED SINCE MAINSTREAM APPS DONT
+    updateDetails  = async () => {
        
-//     };
-
-//     fetch("http://localhost:3333/api/1.0.0/user", {
-//       method: "post",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify(toSend),
-//     })
-     
-//       .then((response) => {
-//         console.log("User created with ID: ", response);
-//        // this.getData();
-//         alert("User added!");
-//         this.props.navigation.navigate("LoginScreen");
-//       })
-//       .catch((error) => {
-//         console.log(error);
-//       });}
-
+       try{
+            const userToken = await AsyncStorage.getItem("userToken");
+            console.log(userToken,"from edit profile")
+            const id = await AsyncStorage.getItem("userID");
+            patchUserDetails(this.state.firstname,this.state.lastname,this.state.email, this.state.password,userToken,id, ()=>{
+                console.log("navigate to profile");
+                this.props.navigation.navigate("UserProfile");
+            },(error)=> {
+                console.log(error);
+                if (error.message == "400"){
+                    console.log("error 400")
+                }
+                else {
+                    console.log("try again")
+                }
+            })
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
 
   
 
@@ -77,20 +59,23 @@ export default class SignupScreen extends Component {
         this.setState({submitted: true})
         this.setState({error: ""})
 
-        if(!(this.state.email && this.state.password)){
-            this.setState({error: "Must enter email and password"})
-            return;
-        }
-
-        if(!EmailValidator.validate(this.state.email)){
-            this.setState({error: "Must enter valid email"})
-            return;
+        // if(!(this.state.email && this.state.password)){
+        //     this.setState({error: "Must enter email and password"})
+        //     return;
+        // }
+        if(this.state.email !="" ){
+            if(!EmailValidator.validate(this.state.email)){
+                this.setState({error: "Must enter valid email"})
+                return;
+            }
         }
 
         const PASSWORD_REGEX = new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")
-        if(!PASSWORD_REGEX.test(this.state.password)){
-            this.setState({error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)"})
-            return;
+        if(this.state.password!= ""){
+            if(!PASSWORD_REGEX.test(this.state.password)){
+                this.setState({error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)"})
+                return;
+            }
         }
         
         // if(!PASSWORD_REGEX.test(this.state.confirmPassword)){
@@ -110,15 +95,23 @@ export default class SignupScreen extends Component {
     }
 
     signupPorcess(){
-        this._onPressButton();
-        this.signup();
+       this._onPressButton()
+        this.updateDetails()
+        
+       // this.signup();
         
         
     }
     render(){
         return (
+            
             <View style={styles.container}>
-
+                <View style={styles.headerContainer}>
+                    <View style={styles.header}>
+                        <Text style={styles.headerText}>Update Your Details</Text>
+                    </View>
+                  
+                </View>
                 <View style={styles.formContainer}>
                     <View style={styles.email}>
                         <Text>Email:</Text>
@@ -129,11 +122,7 @@ export default class SignupScreen extends Component {
                             defaultValue={this.state.email}
                         />
 
-                        <>
-                            {this.state.submitted && !this.state.email &&
-                                <Text style={styles.error}>*Email is required</Text>
-                            }
-                        </>
+                      
                     </View>
             
                     <View style={styles.password}>
@@ -146,11 +135,7 @@ export default class SignupScreen extends Component {
                             secureTextEntry
                         />
 
-                        <>
-                            {this.state.submitted && !this.state.password &&
-                                <Text style={styles.error}>*Password is required</Text>
-                            }
-                        </>
+                     
                     </View>
 
                     {/* <View style = {styles.password}>
@@ -180,11 +165,7 @@ export default class SignupScreen extends Component {
                             
                         />
 
-                        <>
-                            {this.state.submitted && !this.state.firstname &&
-                                <Text style={styles.error}>Firstname is required</Text>
-                            }
-                        </>
+                      
                     </View>
 
                     <View style = {styles.password}>
@@ -197,17 +178,13 @@ export default class SignupScreen extends Component {
                             
                         />
 
-                        <>
-                            {this.state.submitted && !this.state.lastname &&
-                                <Text style={styles.error}>Lastname is required</Text>
-                            }
-                        </>
+                       
                     </View>
 
                     <View style={styles.registerText}>
                         <TouchableOpacity onPress={() => this.signupPorcess()}>
                             <View style={styles.button}>
-                                <Text style={styles.buttonText}>Register</Text>
+                                <Text style={styles.buttonText}>Update Details</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -217,6 +194,9 @@ export default class SignupScreen extends Component {
                             <Text style={styles.error}>{this.state.error}</Text>
                         }
                     </>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate("UserProfile")} style={styles.button} >
+                        <Text style={styles.buttonText}>Go Back</Text>
+                    </TouchableOpacity>
             
                     
                 </View>
@@ -229,14 +209,33 @@ export default class SignupScreen extends Component {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      width: "100%",
-      alignItems: "stretch",
-      justifyContent: "center",
+     // width: "100%",
+     // alignItems: "stretch",
+      //justifyContent: "center",
       padding: "10%"
     },
     formContainer: {
   
     },
+    headerContainer: {
+        marginBottom: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        //marginBottom: 10,
+      },
+      header: {
+        flex: 1,
+        
+        alignItems: "center",
+      },
+      headerText: {
+        
+        fontSize: 26,
+        fontWeight: "bold",
+        color: "#43464B",
+        
+      },
     email:{
       marginBottom: 5
     },
@@ -251,13 +250,18 @@ const styles = StyleSheet.create({
       textDecorationLine: "underline"
     },
     button: {
-      marginBottom: 30,
-      backgroundColor: '#2196F3'
+     // marginBottom: 30,
+     marginTop:10,
+      backgroundColor: '#2196F3',
+      borderRadius:5,
+      padding:10,
     },
     buttonText: {
       textAlign: 'center',
-      padding: 20,
-      color: 'white'
+      padding: 5,
+      fontSize: 14,
+      fontWeight: "bold",
+      color: "#FFFFFF",
     },
     error: {
         color: "red",

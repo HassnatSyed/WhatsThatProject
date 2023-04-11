@@ -30,6 +30,7 @@ async  function loginAPI  (email, password, success, failure)  {
         //stores the session token and user id
         AsyncStorage.setItem("userID", id)
         AsyncStorage.setItem("userToken", sessionID)
+        console.log(sessionID,"from login")
        // console.log(sessionID, id, responseJson);
         success()
 
@@ -49,6 +50,53 @@ async  function loginAPI  (email, password, success, failure)  {
         console.log(error);
     });
    }
+   async  function signUpAPI  (firstname, lastname,email, password , success, failure)  {
+    // Validation here...
+    let toSend = {
+        // email: this.state.email,
+        // password: this.state.password
+        first_name: firstname,
+        last_name: lastname,
+        email: email,
+        password: password
+    };
+
+    console.log(toSend)
+    
+    fetch("http://localhost:3333/api/1.0.0/user", {
+        method: "post",
+        headers: {
+        "Content-Type": "application/json",
+        },
+        body: JSON.stringify(toSend),
+    })
+    .then(async(response) => {
+        if (response.status === 201) {
+        console.log("User Signed Up: ", response);
+       // alert("Login successful!");
+
+            //converting response to JSON
+        
+       // console.log(sessionID, id, responseJson);
+        success()
+
+        // Save user token or other relevant data
+        // Navigate to dashboard or home screen
+        } 
+
+        else if (response.status === 400)
+        {
+        console.log("SignUp Failed ", response);
+        alert("Invalid email or password");
+        failure(new Error("400"));
+        }
+    
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+   }
+
 
    async function addFriend(sessionID, contactID, success, failure) {
     console.log("logging id passed", contactID)
@@ -139,6 +187,7 @@ async  function loginAPI  (email, password, success, failure)  {
 
    export{
     loginAPI,
+    signUpAPI,
     addFriend,
     blockUser,
    }

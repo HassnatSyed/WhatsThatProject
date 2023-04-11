@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import ProfileScreen from '../components/profile';
 import BlockedContacts from '../components/blockedContacts';
+import EditProfile from '../components/editProfile';
 // import ProfileScreen from './components/profile';
 // import BlockedContacts from './components/blockedContacts';
 
@@ -22,6 +23,7 @@ export default class ProfileStack extends Component {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="UserProfile" component={ProfileScreen}/>
             <Stack.Screen name="BlockedContacts" component={BlockedContacts} />
+            <Stack.Screen name="EditProfile" component={EditProfile} />
         </Stack.Navigator>
 
 
