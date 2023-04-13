@@ -148,6 +148,71 @@ async function getUserContacts(sessionID, success) {
       });
        
     }
+    async function getChatList(sessionID, success,failure) {
+      console.log(sessionID);
+        fetch("http://localhost:3333/api/1.0.0/chat", {
+          method: "get",
+          headers: {
+            "Content-Type": "application/json",
+            'X-Authorization': sessionID,
+          },
+        })
+          .then(async(response) => {
+            if (response.status === 200) {
+              const chatList = await response.json();
+              success(chatList);
+              console.log(chatList);
+              //setIsLoading(false);
+            } 
+            else if(response.status === 401) {
+              console.log("Unauthorized! Please Login ", response);
+              failure(new Error("401"));
+            }
+            else if(response.status === 500) {
+              console.log("Server Error ", response);
+              failure(new Error("500"));
+            }
+            else {
+              console.log("Error fetching user details: ", response);
+            }
+          })
+          .catch((error) => {
+            console.log("Error fetching user details: ", error);
+          });
+      }
+
+      async function getChatData(sessionID,chatID, success,failure) {
+        console.log(sessionID);
+          fetch(`http://localhost:3333/api/1.0.0/chat/${chatID}`, {
+            method: "get",
+            headers: {
+              "Content-Type": "application/json",
+              'X-Authorization': sessionID,
+            },
+          })
+            .then(async(response) => {
+              if (response.status === 200) {
+                const chatData = await response.json();
+                success(chatData);
+                console.log(chatData);
+                //setIsLoading(false);
+              } 
+              else if(response.status === 401) {
+                console.log("Unauthorized! Please Login ", response);
+                failure(new Error("401"));
+              }
+              else if(response.status === 500) {
+                console.log("Server Error ", response);
+                failure(new Error("500"));
+              }
+              else {
+                console.log("Error fetching user details: ", response);
+              }
+            })
+            .catch((error) => {
+              console.log("Error fetching user details: ", error);
+            });
+        }
     
   export {
     getUserContacts,
@@ -155,4 +220,6 @@ async function getUserContacts(sessionID, success) {
     getBlockedUsers,
     getUserData,
     getUserImage,
+    getChatList,
+    getChatData
   }

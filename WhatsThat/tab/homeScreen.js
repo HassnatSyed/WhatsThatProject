@@ -10,6 +10,8 @@ import FindFriends from '../components/findFriends';
 import ProfileScreen from '../components/profile';
 import BlockedContacts from '../components/blockedContacts';
 import ProfileStack from '../stack/profileStack';
+import ChatList from '../components/chatList';
+import ChatStack from '../stack/chatStack';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -19,6 +21,7 @@ export default class HomeScreen extends Component {
       return (
           <Tab.Navigator screenOptions={{ headerShown: false }} >
               <Tab.Screen name="Contacts" component={ContactScreen} />
+              <Tab.Screen name="Chats" component={ChatStack} />
               <Tab.Screen name="Find Friends" component={FindFriends} />
               {/* <Tab.Screen name="Profile" component={ProfileScreen} /> */}
               <Tab.Screen name="Profile" component={ProfileStack} />
