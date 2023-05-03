@@ -125,8 +125,9 @@ const styles = StyleSheet.create({
       width: "100%",
     },
     headerText: {
-      fontSize: 20,
+      fontSize: 26,
       fontWeight: "bold",
+      color:"#43464B"
     },
     button: {
       backgroundColor: "#007bff",

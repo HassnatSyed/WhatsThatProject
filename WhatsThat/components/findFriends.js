@@ -323,7 +323,7 @@ export default class FindFriends extends Component {
                 <View style={styles.password}>
                 <Text>Search Users:</Text>
                 <TextInput
-                    style={{height: 40, borderWidth: 1, width: "100%"}}
+                    style={{height: 40, borderWidth: 1, width: "100%", backgroundColor:"#fff"}}
                     placeholder=" Search Users"
                     onChangeText={search => this.setState({search})}
                     defaultValue={this.state.search}

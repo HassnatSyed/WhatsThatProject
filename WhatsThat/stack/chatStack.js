@@ -10,6 +10,7 @@ import BlockedContacts from '../components/blockedContacts';
 import EditProfile from '../components/editProfile';
 import ChatList from '../components/chatList';
 import ChatScreen from '../components/chat';
+import ChatInfoScreen from '../components/chatInfo';
 // import ProfileScreen from './components/profile';
 // import BlockedContacts from './components/blockedContacts';
 
@@ -25,6 +26,7 @@ export default class ChatStack extends Component {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="ChatList" component={ChatList}/>
             <Stack.Screen name="ChatScreen" component={ChatScreen} />
+            <Stack.Screen name="ChatInfoScreen" component={ChatInfoScreen} />
            
         </Stack.Navigator>
 

@@ -1,74 +1,18 @@
 import React, { Component } from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, FlatList,ActivityIndicator } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, FlatList,ActivityIndicator,ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getChatData, getUserContacts } from '../api/getRequests/getRequests';
+import { sendMessage } from '../api/postRequests/postRequests';
 
 export default class ChatScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
       chatID: this.props.route.params.chat_id,
-      text: '',
+      text: "",
       chat:[],
-      //chatID: 1,
-      // chat: {
-      //   "name": "The Rod Stewart Appreciation Society",
-      //   "creator": {
-      //       "user_id": 1,
-      //       "first_name": "Ashley",
-      //       "last_name": "Williams",
-      //       "email": "ashley.williams1@mmu.ac.uk"
-      //   },
-      //   "members": [
-      //       {
-      //           "user_id": 1,
-      //           "first_name": "Ashley",
-      //           "last_name": "Williams",
-      //           "email": "ashley.williams1@mmu.ac.uk"
-      //       },
-      //       {
-      //           "user_id": 6,
-      //           "first_name": "Bill",
-      //           "last_name": "Gates",
-      //           "email": "bill.gates@gmail.com"
-      //       }
-      //   ],
-      //   "messages": [
-      //       {
-      //           "message_id": 4,
-      //           "timestamp": 1681320524861,
-      //           "message": "I have questions. Why whatsapp?",
-      //           "author": {
-      //               "user_id": 6,
-      //               "first_name": "Bill",
-      //               "last_name": "Gates",
-      //               "email": "bill.gates@gmail.com"
-      //           }
-      //       },
-      //       {
-      //           "message_id": 3,
-      //           "timestamp": 1681319824451,
-      //           "message": "We will be making a whatsapp like app. Any questions?",
-      //           "author": {
-      //               "user_id": 1,
-      //               "first_name": "Ashley",
-      //               "last_name": "Williams",
-      //               "email": "ashley.williams1@mmu.ac.uk"
-      //           }
-      //       },
-      //       {
-      //           "message_id": 1,
-      //           "timestamp": 1681087218237,
-      //           "message": "Welcome to all our new members",
-      //           "author": {
-      //               "user_id": 1,
-      //               "first_name": "Ashley",
-      //               "last_name": "Williams",
-      //               "email": "ashley.williams1@mmu.ac.uk"
-      //           }
-      //       }
-      //   ]
-    //}
+      submitted: false,
+     
     };
     this.lastAuthorId = null;
     this.headerWidth = 0;
@@ -116,26 +60,58 @@ getChatDetails = async () => {
     } 
     
 };
+
+postMessage = async () => {
+    
+  const userToken = await AsyncStorage.getItem('userToken');
+  const id = await AsyncStorage.getItem('userID');
+  console.log(userToken, id);
+  // Do something with userToken and id
+  //alert("running")
+  console.log(this.state.text)
+  sendMessage(userToken,this.state.chatID ,this.state.text,()=>{
+    this.setState({ text: '' });
+    this.setState({ submitted: false });
+    this.getChatDetails();
+    this.forceUpdate();
+    
+}),(error)=> {
+    console.log(error);
+    if (error.message == "400"){
+        console.log("error 400")
+    }
+    else {
+        console.log("try again")
+    }
+} 
+
+};
+
   handleSend = () => {
     // Do something with this.state.text
-    this.setState({ text: '' });
+    this.setState({ submitted: true });
+    console.log(this.state.text)
+    if (this.state.text){
+      this.postMessage();
+      console.log("message sent")
+      
+     // this.forceUpdate();
+    }
   };
 
-  renderMessage = ({ item }) => {
-    const isCurrentUser = item.author.user_id === this.state.chat.creator.user_id;
-    const isFirstInSeries = item.author.user_id !== this.lastAuthorId;
-    const messageStyle = isCurrentUser ? styles.rightMessage : styles.leftMessage;
-    const authorName = isFirstInSeries ? item.author.first_name : null;
+renderMessage = ({ item, index }) => {
+  const isCurrentUser = item.author.user_id === this.state.chat.creator.user_id;
+  const isFirstInSeries = index === 0 || item.author.user_id !== this.state.chat.messages[this.state.chat.messages.length - index].author.user_id;
+  const messageStyle = isCurrentUser ? styles.rightMessage : styles.leftMessage;
+  const authorName = isFirstInSeries ? item.author.first_name : null;
 
-    this.lastAuthorId = item.author.user_id;
-
-    return (
-      <View style={[styles.messageContainer, messageStyle]}>
-        {authorName && <Text style={styles.author}>{authorName}</Text>}
-        <Text>{item.message}</Text>
-      </View>
-    );
-  };
+  return (
+    <View style={[styles.messageContainer, messageStyle]}>
+      {authorName && <Text style={styles.author}>{authorName}</Text>}
+      <Text>{item.message}</Text>
+    </View>
+  );
+};
 
   onHeaderLayout = (event) => {
     this.headerWidth = event.nativeEvent.layout.width;
@@ -170,28 +146,35 @@ getChatDetails = async () => {
           <Text style={styles.leftHeaderButtonText}>Back</Text>
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <TouchableOpacity onPress={() => console.log('Header button pressed')}>
+          <TouchableOpacity onPress={() => this.props.navigation.navigate("ChatInfoScreen", { chat_id: this.state.chatID })}>
             <Text style={styles.headerText} numberOfLines={1} ellipsizeMode="tail">
               {chat.name}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
+      <ScrollView style={{ flex: 1 ,paddingLeft:10, paddingRight:10,}}>
         <FlatList
-          style={styles.messageList}
           data={chat.messages.slice().reverse()}
           extraData={this.state}
           renderItem={this.renderMessage}
           keyExtractor={(item) => item.message_id.toString()}
         />
+      </ScrollView>
         <View style={styles.footer}>
           <TextInput
             style={styles.textInput}
             placeholder="Type your message here"
             value={text}
             onChangeText={(text) => this.setState({ text })}
+            
           />
-          <TouchableOpacity style={styles.sendButton} onPress={this.handleSend}>
+          <>
+            {this.state.submitted && !this.state.text &&
+                <Text style={styles.error}>*Enter a message before sending</Text>
+            }
+          </>
+          <TouchableOpacity style={styles.sendButton} onPress={() =>this.handleSend()}>
             <Text style={styles.sendButtonText}>Send</Text>
           </TouchableOpacity>
         </View>
@@ -205,16 +188,17 @@ getChatDetails = async () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingLeft:10,
-    paddingRight:10,
+    
     backgroundColor: '#F5F5F5'
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
     padding: 10,
-    paddingLeft:5
+    paddingLeft:5,
+    marginBottom:10
+    
   },
   titleContainer: {
     flex: 1,
@@ -227,7 +211,7 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     paddingRight: 15,
     justifyContent: 'center',
-    marginRight: 5, // Add some margin to separate the button and title
+    marginRight: 3, // Add some margin to separate the button and title
     //width:10
   },
   leftHeaderButtonText: {
@@ -252,6 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     paddingLeft: 5,
     paddingRight: 5,
+    marginLeft:20
   },
   leftMessage: {
     alignSelf: 'flex-start',
@@ -260,6 +245,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     paddingLeft: 5,
     paddingRight: 5,
+    marginRight:20
   },
   author: {
     fontSize: 14,
@@ -290,4 +276,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  error: {
+    color: "red",
+    fontWeight: '900'
+}
 });

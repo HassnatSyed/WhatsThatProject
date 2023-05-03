@@ -100,11 +100,7 @@ async  function loginAPI  (email, password, success, failure)  {
 
    async function addFriend(sessionID, contactID, success, failure) {
     console.log("logging id passed", contactID)
-    let toSend = {
-        // email: this.state.email,
-        // password: this.state.password
-        contactID,
-    };
+  
 
     
       fetch("http://localhost:3333/api/1.0.0/user/" +contactID + "/contact", {
@@ -184,10 +180,58 @@ async  function loginAPI  (email, password, success, failure)  {
             });
         }
 
+        async function sendMessage(sessionID, chatId, message, success, failure) {
+            console.log("logging id passed", chatId)
+            let toSend = {
+                // email: this.state.email,
+                // password: this.state.password
+                message,
+                
+            };
+        
+            
+              fetch("http://localhost:3333/api/1.0.0/chat/" +chatId + "/message", {
+                method: "post",
+                headers: {
+                  "Content-Type": "application/json",
+                  'X-Authorization': sessionID,
+                },
+                body: JSON.stringify(toSend),
+              })
+                .then(async(response) => {
+                  if (response.status === 200) {
+                   // const searchResult = await response.json();
+                    success();
+                    //console.log(searchResult);
+                    //setIsLoading(false);
+                  } 
+                  else if(response.status === 401) {
+                    console.log("Unauthorized! Please Login ", response);
+                    failure(new Error("401"));
+                  }
+                  else if(response.status === 400) {
+                    console.log("Cannot add yourself as a friend", response);
+                    failure(new Error("400"));
+                  }
+                  else if(response.status === 404) {
+                    console.log("User Not Found ", response);
+                    failure(new Error("404"));
+                  }
+                  else if(response.status === 500) {
+                    console.log("Server Error ", response);
+                    failure(new Error("500"));
+                  }
+                })
+                .catch((error) => {
+                  console.log("Error adding user: ", error);
+                });
+        }
+
 
    export{
     loginAPI,
     signUpAPI,
     addFriend,
     blockUser,
+    sendMessage
    }
