@@ -121,8 +121,37 @@ async function removeFriend(sessionID, contactID, success, failure) {
         });
     }
 
+
+    async function deleteMessage(messageID, sessionID, chatID, success, failure) {
+      
+      // Remove any keys with null values from the object
+     
+      
+      console.log(sessionID, "from patchapi");
+      fetch(`http://localhost:3333/api/1.0.0/chat/${chatID}/message/${messageID}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Authorization": sessionID,
+        },
+        
+      })
+      .then(async (response) => {
+        if (response.status === 200) {
+          console.log("Message Deleted: ", response);
+          success();
+        } else if (response.status === 400) {
+          console.log("Not Found ", response);
+          failure(new Error("400"));
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    }
 export{
     removeFriend,
     unblockUser,
-    removeMember
+    removeMember,
+    deleteMessage
 }  

@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, FlatList,ActivityIndicator,ScrollView } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, FlatList,ActivityIndicator,ScrollView,Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getChatData, getUserContacts } from '../api/getRequests/getRequests';
 import { sendMessage } from '../api/postRequests/postRequests';
+import { patchMessage } from '../api/patchRequests/patchRequests';
+import { deleteMessage } from '../api/deleteRequests/deleteRequest';
+
 
 export default class ChatScreen extends Component {
   constructor(props) {
@@ -12,20 +15,52 @@ export default class ChatScreen extends Component {
       text: "",
       chat:[],
       submitted: false,
+      editingMessage: "",
+      editingMessageId: null,
+      showModal: false,
+      modalMessage: ''
      
     };
     this.lastAuthorId = null;
     this.headerWidth = 0;
   }
 
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
+  onModalDismiss = () => {
+    this.setState({
+      modalMessage: '',
+    });
+  };
+  showModalWithMessage = (message) => {
+    this.setState({
+      modalMessage: message,
+      showModal: true,
+    });
+  
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
+  };
+
   componentDidMount() {
     this.unsubscribe = this.props.navigation.addListener('focus', () => {
      // this.checkLoggedIn();
      console.log(this.state.chatID)
       this.getChatDetails();
+      
      // console.log(chat);
      
     })
+}
+componentDidUpdate(prevProps, prevState) {
+  if (prevState.chat !== this.state.chat) {
+    this.flatListRef.scrollToEnd({animated: true});
+  }
 }
   
 componentWillUnmount(){
@@ -47,7 +82,9 @@ getChatDetails = async () => {
       //alert("running")
       getChatData(userToken,this.state.chatID ,(chat)=>{
         console.log(chat);
-        this.setState({ chat, isLoading: false });
+        this.setState({ chat, isLoading: false }, () => {
+          this.flatListRef.scrollToEnd({animated: true});
+        });
         
     }),(error)=> {
         console.log(error);
@@ -72,8 +109,9 @@ postMessage = async () => {
   sendMessage(userToken,this.state.chatID ,this.state.text,()=>{
     this.setState({ text: '' });
     this.setState({ submitted: false });
-    this.getChatDetails();
+    this.getChatDetails();  
     this.forceUpdate();
+    this.flatListRef.scrollToEnd({animated: true});
     
 }),(error)=> {
     console.log(error);
@@ -99,19 +137,95 @@ postMessage = async () => {
     }
   };
 
-renderMessage = ({ item, index }) => {
-  const isCurrentUser = item.author.user_id === this.state.chat.creator.user_id;
-  const isFirstInSeries = index === 0 || item.author.user_id !== this.state.chat.messages[this.state.chat.messages.length - index].author.user_id;
-  const messageStyle = isCurrentUser ? styles.rightMessage : styles.leftMessage;
-  const authorName = isFirstInSeries ? item.author.first_name : null;
+  renderMessage = ({ item, index }) => {
+    const isCurrentUser = item.author.user_id === this.state.chat.creator.user_id;
+    const isFirstInSeries = index === 0 || item.author.user_id !== this.state.chat.messages[this.state.chat.messages.length - index].author.user_id;
+    const messageStyle = isCurrentUser ? styles.rightMessage : styles.leftMessage;
+    const authorName = isFirstInSeries ? item.author.first_name : null;
+  
+    if (isCurrentUser && item.message_id === this.state.editingMessageId) {
+    
 
-  return (
-    <View style={[styles.messageContainer, messageStyle]}>
-      {authorName && <Text style={styles.author}>{authorName}</Text>}
-      <Text>{item.message}</Text>
-    </View>
-  );
-};
+      return (
+        <View style={[styles.messageContainer, messageStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' , width:300}]}>
+          <TouchableOpacity style={{ backgroundColor: "#ff4d4d", marginRight: 8, padding: 10, borderRadius: 20 }} onPress={this.deleteThisMessage}>
+            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>Delete</Text>
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={[styles.textInput, { height: 'auto', maxHeight: 150, paddingVertical: 8, paddingHorizontal: 12 }]}
+              value={this.state.editingMessage}
+              onChangeText={(editingMessage) => this.setState({ editingMessage })}
+              multiline
+              placeholder="Type your message here"
+            />
+          </View>
+          <TouchableOpacity style={{ backgroundColor: "#4CAF50", marginLeft: 8, padding: 10, borderRadius: 20 }} onPress={this.updateMessage} disabled={!this.state.editingMessage}>
+            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>✓</Text>
+          </TouchableOpacity>
+        </View>
+      );
+      
+
+
+    }
+  
+    return (
+      <View style={[styles.messageContainer, messageStyle]}>
+        {authorName && <Text style={styles.author}>{authorName}</Text>}
+        <TouchableOpacity onLongPress={() => this.setState({ editingMessageId: item.message_id, editingMessage: item.message })}>
+          <Text>{item.message}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+  
+
+  updateMessage  = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      const id = await AsyncStorage.getItem("userID");
+  
+      patchMessage(this.state.editingMessage, this.state.editingMessageId, userToken, this.state.chatID, ()=>{
+        console.log("Updated message");
+        this.setState({ editingMessageId: null, editingMessage: null });  // Reset editing state
+        this.getChatDetails();  // Refresh chat data after editing
+        this.showModalWithMessage("Message Updated"); // Show the modal
+      },(error)=> {
+        console.log(error);
+        if (error.message == "400"){
+          console.log("error 400")
+        } else {
+          console.log("try again")
+        }
+      })
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  deleteThisMessage  = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      const id = await AsyncStorage.getItem("userID");
+  
+      deleteMessage( this.state.editingMessageId, userToken, this.state.chatID, ()=>{
+        console.log("Deleted message");
+        this.setState({ editingMessageId: null, editingMessage: null });  // Reset editing state
+        this.getChatDetails();  // Refresh chat data after editing
+        this.showModalWithMessage("Message Deleted");
+      },(error)=> {
+        console.log(error);
+        if (error.message == "400"){
+          console.log("error 400")
+        } else {
+          console.log("try again")
+        }
+      })
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  
 
   onHeaderLayout = (event) => {
     this.headerWidth = event.nativeEvent.layout.width;
@@ -153,21 +267,34 @@ renderMessage = ({ item, index }) => {
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView style={{ flex: 1 ,paddingLeft:10, paddingRight:10,}}>
+      <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View style={{ backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8 }}>
+            <Text>{this.state.modalMessage}</Text>
+            <TouchableOpacity onPress={this.toggleModal}>
+              <Text>Close Modal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <View style={{ flex: 1 ,paddingLeft:10, paddingRight:10,}}>
         <FlatList
+          ref={ref => { this.flatListRef = ref; }}
           data={chat.messages.slice().reverse()}
           extraData={this.state}
           renderItem={this.renderMessage}
           keyExtractor={(item) => item.message_id.toString()}
+          onContentSizeChange={() => this.flatListRef.scrollToEnd({animated: true})}
+     
         />
-      </ScrollView>
+      </View>
         <View style={styles.footer}>
           <TextInput
             style={styles.textInput}
             placeholder="Type your message here"
             value={text}
             onChangeText={(text) => this.setState({ text })}
-            
+            multiline
           />
           <>
             {this.state.submitted && !this.state.text &&

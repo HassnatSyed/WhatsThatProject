@@ -70,7 +70,39 @@ async function patchChatDetails(chatName, sessionID, chatID, success, failure) {
   });
 }
 
+async function patchMessage(messagetxt,messageID, sessionID, chatID, success, failure) {
+  let toSend = {
+    message: messagetxt
+  };
+
+  // Remove any keys with null values from the object
+ 
+  console.log(toSend);
+  console.log(sessionID, "from patchapi");
+  fetch(`http://localhost:3333/api/1.0.0/chat/${chatID}/message/${messageID}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Authorization": sessionID,
+    },
+    body: JSON.stringify(toSend),
+  })
+  .then(async (response) => {
+    if (response.status === 200) {
+      console.log("Message Updated: ", response);
+      success();
+    } else if (response.status === 400) {
+      console.log("Details Not Updated ", response);
+      failure(new Error("400"));
+    }
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+}
+
 export {
   patchUserDetails,
   patchChatDetails,
+  patchMessage,
 }

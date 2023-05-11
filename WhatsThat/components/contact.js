@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   friendContainer: {
-    backgroundColor: '#4dff4d',
+    backgroundColor: '#4CAF50',
     borderRadius: 5,
     paddingVertical: 5,
     paddingHorizontal: 10,
