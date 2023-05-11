@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, FlatList, ActivityIndicator} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { patchChatDetails } from '../api/patchRequests/patchRequests';
-import { getChatData } from '../api/getRequests/getRequests';
+import { getChatData, getUserContacts, searchAllUsers } from '../api/getRequests/getRequests';
+import { addMember } from '../api/postRequests/postRequests';
+import { removeMember } from '../api/deleteRequests/deleteRequest';
 
 export default class ChatInfoScreen extends Component {
   constructor(props) {
@@ -11,7 +13,10 @@ export default class ChatInfoScreen extends Component {
       chatID: this.props.route.params.chat_id,
       chat: [],
       isLoading: true,
-      newName: ""
+      newName: "",
+      searchResults:[],
+      search:"",
+      contactData:[]
     };
   }
 
@@ -20,6 +25,7 @@ export default class ChatInfoScreen extends Component {
      // this.checkLoggedIn();
      console.log(this.state.chatID)
       this.getChatDetails();
+      this.getContacts();
      // console.log(chat);
      
     })
@@ -76,29 +82,132 @@ componentWillUnmount(){
      }
  }
 
-  handleAddContact = () => {
-    // Do something with the entered contact
-    console.log('Add contact:', this.state.contactInput);
-
-    // Add the contact to the contacts array
-    this.setState(prevState => ({
-      contacts: [
-        ...prevState.contacts,
-        {
-          user_id: prevState.contacts.length + 1,
-          first_name: prevState.contactInput.split(' ')[0],
-          last_name: prevState.contactInput.split(' ')[1],
-          email: 'example@example.com',
-        },
-      ],
-    }));
-  };
-
-  renderContact = ({ item }) => (
+ renderMember = (item) => (
+  <View style={styles.memberRow}>
     <Text>
       {item.first_name} {item.last_name}
     </Text>
+    <TouchableOpacity style={styles.removeButton} onPress={() => this.remMember(item)}>
+      <Text style={styles.buttonText}>Remove</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+
+  findUsers = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const id = await AsyncStorage.getItem('userID');
+      console.log(userToken, id);
+  
+      searchAllUsers(userToken, this.state.search, (searchResults) => {
+        console.log(searchResults);
+        console.log("contacts", this.state.contactData)
+        // Filter out the users who are already members of the chat
+        const filteredResults = searchResults.filter(
+          (user) => !this.isMember(user) && this.isInContactData(user)
+          );
+        
+  
+        this.setState({ searchResults: filteredResults, isLoading: false });
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  isInContactData(item) {
+    return this.state.contactData.some(contact => contact.user_id === item.user_id);
+  }
+
+  renderContact = (item) => (
+    <View style={styles.contactRow}>
+      <Text>
+        {item.given_name} {item.family_name}
+      </Text>
+      <TouchableOpacity style={styles.addButton} onPress={() => this.addContact(item)}>
+        <Text style={styles.buttonText}>Add</Text>
+      </TouchableOpacity>
+    </View>
   );
+  
+  getContacts = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const id = await AsyncStorage.getItem('userID');
+      console.log(userToken, id);
+      // Do something with userToken and id
+      //alert("running")
+      getUserContacts(userToken, (contactData)=>{
+        console.log("contactstest",this.state.contactData);
+        this.setState({ contactData, isLoading: false });
+        
+    })
+    } 
+    catch (error) {
+      console.log(error);
+    }
+};
+remMember = async (item) => {
+  try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const id = await AsyncStorage.getItem('userID');
+      console.log(userToken, id);
+      // Do something with userToken and id
+      //alert("running")
+      removeMember(userToken,this.state.chatID ,item.user_id, ()=>{
+        console.log(item.user_id, "the user id");
+        this.setState({ isLoading: false });
+       
+        this.getChatDetails() 
+        // this.getContacts()
+        
+      },(error)=> {
+      console.log(error);
+      if (error.message == "400"){
+          console.log("error 400")
+      }
+      else {
+          console.log("try again")
+      }
+      })
+    } 
+    catch (error) {
+      console.log(error);
+    }
+  }
+  addContact = async (item) => {
+    try {
+        const userToken = await AsyncStorage.getItem('userToken');
+        const id = await AsyncStorage.getItem('userID');
+        console.log(userToken, id);
+        // Do something with userToken and id
+        //alert("running")
+        addMember(userToken,this.state.chatID ,item.user_id, ()=>{
+          console.log(item.user_id, "the user id");
+          this.setState({ isLoading: false });
+      
+         //this.forceUpdate()
+          
+        },(error)=> {
+        console.log(error);
+        if (error.message == "400"){
+            console.log("error 400")
+        }
+        else {
+            console.log("try again")
+        }
+        })
+      } 
+      catch (error) {
+        console.log(error);
+      }
+    }
+
+    isMember = (user) => {
+      return this.state.chat.members.some(member => member.user_id === user.user_id);
+    };
+  
+
 
   render() {
     const { chat, newName, contactInput, contacts } = this.state;
@@ -131,24 +240,36 @@ componentWillUnmount(){
               <Text style={styles.buttonText}> Save  </Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.subtitle}>Add/Remove Contacts:</Text>
+            <Text style={styles.subtitle}>Members:</Text>
+              <ScrollView style={styles.memberList}>
+                <FlatList
+                  data={chat.members}
+                  renderItem={({ item }) => this.renderMember(item)}
+                  keyExtractor={(item, index) => index.toString()}
+                />
+              </ScrollView>
+          <Text style={styles.subtitle}>Add/Remove Members:</Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
               placeholder="Enter contact name"
               onChangeText={text => this.setState({ contactInput: text })}
             />
-            <TouchableOpacity style={styles.button} onPress={this.handleAddContact}>
+            <TouchableOpacity style={styles.button} onPress={this.findUsers}>
               <Text style={styles.buttonText}>Search</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView>
-            <FlatList
-              data={contacts}
-              renderItem={this.renderContact}
+          {this.state.searchResults.length > 0 ?
+            <ScrollView>
+             <FlatList
+              data={this.state.searchResults}
+              renderItem={({ item }) => this.renderContact(item)}
               keyExtractor={(item, index) => index.toString()}
             />
-          </ScrollView>
+            </ScrollView>
+              :
+            <Text>No results found</Text>
+          }
         </View>
       </View>
     );
@@ -218,4 +339,40 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  memberRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  memberList: {
+    maxHeight: 200,  // Set a max height
+    backgroundColor: '#FFFFFF',  // Light gray background
+    marginVertical: 10,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#FFFFFF',  // Slightly darker gray background
+  },
+  addButton: {
+    padding: 10,
+    backgroundColor: '#4CAF50',  // Change button color to green
+    borderRadius: 5,
+  },
+  removeButton: {
+    padding: 10,
+    backgroundColor: '#F44336',  // Change button color to red
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',  // Change button text color to white
+  },
+ 
 });

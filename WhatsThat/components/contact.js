@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,FlatList,Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,FlatList,Image,ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getBlockedUsers, getUserContacts, getUserImage} from '../api/getRequests/getRequests';
-import { blockUser } from '../api/postRequests/postRequests';
-import { unblockUser } from '../api/deleteRequests/deleteRequest';
+import { addFriend, blockUser } from '../api/postRequests/postRequests';
+import { removeFriend, unblockUser } from '../api/deleteRequests/deleteRequest';
 
 
 export default class ContactScreen extends Component {
@@ -17,7 +17,7 @@ export default class ContactScreen extends Component {
         blockList:[],
         newlyBlocked:[],
         imageUri:null,
-        
+        newFriends:[],
     };
 
      this._onPressButton = this._onPressButton.bind(this)
@@ -189,7 +189,75 @@ getImage = async (item) => {
     }
 }
  
+isFriend(item) {
+  return this.state.contactData.some(contact => contact.user_id === item.user_id);
+}
+isNewFriend = (item) => {
+  return this.state.newFriends.some((friend) => friend.user_id === item.user_id);
+}
+addAsFriend = async (item) => {
+  try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const id = await AsyncStorage.getItem('userID');
+      console.log(userToken, id);
+      // Do something with userToken and id
+      //alert("running")
+      addFriend(userToken, item.user_id, ()=>{
+        console.log(item.user_id, "the user id");
+        this.setState({ isLoading: false });
+        // update newFriends state with the new friend
+        this.setState(prevState => ({
+          //contactData: [...prevState.contactData, item], 
+          newFriends: [...prevState.newFriends, item] // add the new friend to the newFriends array
+        }));
+        
+      },(error)=> {
+      console.log(error);
+      if (error.message == "400"){
+          console.log("error 400")
+      }
+      else {
+          console.log("try again")
+      }
+      })
+    } 
+    catch (error) {
+      console.log(error);
+    }
+}
 
+
+
+removeFromFriend = async (item) => {
+  try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const id = await AsyncStorage.getItem('userID');
+      console.log(userToken, id);
+      // Do something with userToken and id
+      //alert("running")
+      removeFriend(userToken, item.user_id, ()=>{
+        console.log(item.user_id, "the user id");
+        this.setState({ isLoading: false });
+        // update newFriends state by  removing friend
+        this.setState(prevState => ({
+          //contactData: [...prevState.contactData, item],
+          newFriends: prevState.newFriends.filter(friend => friend.user_id !== item.user_id)// remove the item from the newFriends array
+        }));
+        
+      },(error)=> {
+      console.log(error);
+      if (error.message == "400"){
+          console.log("error 400")
+      }
+      else {
+          console.log("try again")
+      }
+      })
+    } 
+    catch (error) {
+      console.log(error);
+    }
+}
 renderContacts(item) {
   if (item.imageUri == null) {
     // if the imageUri is not available in the state, call getImage function to get the image for the current contact
@@ -202,15 +270,24 @@ renderContacts(item) {
       </View>
       <Text style={styles.userItem}>{item.first_name} {item.last_name}</Text>
       <View style={styles.buttonContainer}>
-        {this.isNewlyBlocked(item) ? (
-          <TouchableOpacity onPress={() => this.removeFromBlockList(item)}>
-            <Text style={styles.buttonText}>Unblock</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => this.addToBlockList(item)}>
-            <Text style={styles.buttonText}>Block</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.blockContainer}>
+          {this.isNewlyBlocked(item) ? (
+            <TouchableOpacity onPress={() => this.removeFromBlockList(item)}>
+              <Text style={styles.buttonText}>Unblock</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => this.addToBlockList(item)}>
+              <Text style={styles.buttonText}>Block</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.friendContainer}>
+          
+            <TouchableOpacity onPress={() => this.removeFromFriend(item)}>
+              <Text style={styles.buttonText}>Unfriend</Text>
+            </TouchableOpacity>
+          
+        </View>
       </View>
     </View>
   );
@@ -221,7 +298,7 @@ render() {
   if (this.state.isLoading) {
     return (
       <View>
-        <ActivityIndicator />
+        <ActivityIndicator size = "large" />
       </View>
     );
   }
@@ -232,11 +309,13 @@ render() {
         <Text style={styles.header}>Contacts</Text>
       </View>
       {this.state.contactData.length > 0 ? (
+        <ScrollView>
         <FlatList
           data={this.state.contactData}
           renderItem={({ item }) => this.renderContacts(item)}
           keyExtractor={(item, index) => index.toString()}
         />
+        </ScrollView>
       ) : (
         <Text>You have no Contacts</Text>
       )}
@@ -286,11 +365,27 @@ const styles = StyleSheet.create({
     color: '#43464B',
   },
   buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  blockContainer: {
     backgroundColor: '#ff4d4d',
     borderRadius: 5,
     paddingVertical: 5,
     paddingHorizontal: 10,
+    marginRight: 10,
   },
+  friendContainer: {
+    backgroundColor: '#4dff4d',
+    borderRadius: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  buttonText: {
+    color: '#fff',
+  },
+  
   buttonText: {
     fontSize: 14,
     fontWeight: 'bold',

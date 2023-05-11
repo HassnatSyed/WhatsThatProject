@@ -227,11 +227,56 @@ async  function loginAPI  (email, password, success, failure)  {
                 });
         }
 
+        async function addMember(sessionID, chatID, userID, success, failure) {
+          console.log("logging id passed", userID)
+        
+      
+          
+            fetch("http://localhost:3333/api/1.0.0/chat/" +chatID + "/user/"+ userID, {
+              method: "post",
+              headers: {
+                "Content-Type": "application/json",
+                'X-Authorization': sessionID,
+              },
+            })
+              .then(async(response) => {
+                if (response.status === 200) {
+                 // const searchResult = await response.json();
+                  success();
+                  //console.log(searchResult);
+                  //setIsLoading(false);
+                } 
+                else if(response.status === 401) {
+                  console.log("Unauthorized! Please Login ", response);
+                  failure(new Error("401"));
+                }
+                else if(response.status === 400) {
+                  console.log("If user not already a member, Add user as friend", response);
+                  failure(new Error("400"));
+                }
+                else if(response.status === 401) {
+                  console.log("Not Authorized", response);
+                  failure(new Error("400"));
+                }
+                else if(response.status === 404) {
+                  console.log("User Not Found ", response);
+                  failure(new Error("404"));
+                }
+                else if(response.status === 500) {
+                  console.log("Server Error ", response);
+                  failure(new Error("500"));
+                }
+              })
+              .catch((error) => {
+                console.log("Error adding user: ", error);
+              });
+          }
 
    export{
     loginAPI,
     signUpAPI,
     addFriend,
     blockUser,
-    sendMessage
+    sendMessage,
+    addMember
    }

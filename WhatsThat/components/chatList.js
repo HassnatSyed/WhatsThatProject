@@ -1,5 +1,5 @@
 import React ,{ Component }from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList,ScrollView } from 'react-native';
 import { getChatList } from '../api/getRequests/getRequests';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -97,11 +97,13 @@ getUserChatList = async () => {
             <Text style={styles.headerButtonText}>New Chat</Text>
           </TouchableOpacity>
         </View>
+        <ScrollView>
         <FlatList
           data={chatList}
           renderItem={this.renderChatItem}
           keyExtractor={(item) => item.chat_id.toString()}
         />
+        </ScrollView>
       </View>
     );
   }
