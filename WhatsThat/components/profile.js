@@ -163,7 +163,7 @@ export default class ProfileScreen extends Component {
                     <TouchableOpacity style={styles.bottomButton} onPress={() => this.props.navigation.navigate("BlockedContacts")}>
                         <Text style={styles.bottomButtonText}>Blocked Contacts</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.bottomButton} onPress={() => Alert.alert('Function 2')}>
+                    <TouchableOpacity style={styles.bottomButton} onPress={() => this.props.navigation.navigate("CameraSendToServer")}>
                         <Text style={styles.bottomButtonText}> Update Picture</Text>
                     </TouchableOpacity>
                 </View>

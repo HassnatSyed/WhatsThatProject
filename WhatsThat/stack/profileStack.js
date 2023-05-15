@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import ProfileScreen from '../components/profile';
 import BlockedContacts from '../components/blockedContacts';
 import EditProfile from '../components/editProfile';
+import CameraSendToServer from '../components/camera';
 // import ProfileScreen from './components/profile';
 // import BlockedContacts from './components/blockedContacts';
 
@@ -24,6 +25,7 @@ export default class ProfileStack extends Component {
             <Stack.Screen name="UserProfile" component={ProfileScreen}/>
             <Stack.Screen name="BlockedContacts" component={BlockedContacts} />
             <Stack.Screen name="EditProfile" component={EditProfile} />
+            <Stack.Screen name="CameraSendToServer" component={CameraSendToServer}/>
         </Stack.Navigator>
 
 
