@@ -17,6 +17,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export default class HomeScreen extends Component {
+
   render() {
       return (
           <Tab.Navigator screenOptions={{ headerShown: false }} >

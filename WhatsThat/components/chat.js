@@ -160,7 +160,7 @@ postMessage = async () => {
               placeholder="Type your message here"
             />
           </View>
-          <TouchableOpacity style={{ backgroundColor: "#4CAF50", marginLeft: 8, padding: 10, borderRadius: 20 }} onPress={this.updateMessage} disabled={!this.state.editingMessage}>
+          <TouchableOpacity style={{ backgroundColor: "#4CAF50", marginLeft: 8, padding: 10, borderRadius: 20 }} onPress={this.updateMessage} >
             <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>✓</Text>
           </TouchableOpacity>
         </View>
@@ -183,6 +183,10 @@ postMessage = async () => {
 
   updateMessage  = async () => {
     try {
+      if (!this.state.editingMessage) {
+        this.showModalWithMessage("Cannot update to an empty Message");
+        return
+      }
       const userToken = await AsyncStorage.getItem("userToken");
       const id = await AsyncStorage.getItem("userID");
   
@@ -272,7 +276,7 @@ postMessage = async () => {
           <View style={{ backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8 }}>
             <Text>{this.state.modalMessage}</Text>
             <TouchableOpacity onPress={this.toggleModal}>
-              <Text>Close Modal</Text>
+              <Text>Close </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -298,7 +302,8 @@ postMessage = async () => {
           />
           <>
             {this.state.submitted && !this.state.text &&
-                <Text style={styles.error}>*Enter a message before sending</Text>
+                <Text style={styles.error}>*Enter a message</Text>
+                
             }
           </>
           <TouchableOpacity style={styles.sendButton} onPress={() =>this.handleSend()}>

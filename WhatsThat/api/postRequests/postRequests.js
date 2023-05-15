@@ -254,10 +254,6 @@ async  function loginAPI  (email, password, success, failure)  {
                   console.log("If user not already a member, Add user as friend", response);
                   failure(new Error("400"));
                 }
-                else if(response.status === 401) {
-                  console.log("Not Authorized", response);
-                  failure(new Error("400"));
-                }
                 else if(response.status === 404) {
                   console.log("User Not Found ", response);
                   failure(new Error("404"));
@@ -271,6 +267,89 @@ async  function loginAPI  (email, password, success, failure)  {
                 console.log("Error adding user: ", error);
               });
           }
+          async function newChat(sessionID, chatName, success, failure) {
+            
+            let toSend = {
+              // email: this.state.email,
+              // password: this.state.password
+              name: chatName,
+              
+          };
+        
+            
+              fetch("http://localhost:3333/api/1.0.0/chat", {
+                method: "post",
+                headers: {
+                  "Content-Type": "application/json",
+                  'X-Authorization': sessionID,
+                },
+                body: JSON.stringify(toSend),
+              })
+                .then(async(response) => {
+                  if (response.status === 201) {
+                   // const searchResult = await response.json();
+                    success();
+                    //console.log(searchResult);
+                    //setIsLoading(false);
+                  } 
+                  else if(response.status === 401) {
+                    console.log("Unauthorized! Please Login ", response);
+                    failure(new Error("401"));
+                  }
+                  else if(response.status === 400) {
+                    console.log("Bad Request", response);
+                    failure(new Error("400"));
+                  }
+                
+                  else if(response.status === 500) {
+                    console.log("Server Error ", response);
+                    failure(new Error("500"));
+                  }
+                })
+                .catch((error) => {
+                  console.log("Error creating chat: ", error);
+                });
+            }
+
+            async  function logoutAPI (sessionID, success, failure)  {
+              console.log("Logout")
+              
+              fetch("http://localhost:3333/api/1.0.0/logout", {
+            
+              method: "POST",
+              headers: {
+                  "X-Authorization": sessionID
+              }
+              })
+              .then(async (response) => {
+              
+              
+              if(response.status === 200) {
+                   AsyncStorage.removeItem("userToken")
+                   AsyncStorage.removeItem("userID")
+                  
+                  success()
+              }
+              else if(response.status === 401) {
+                  console.log("Unauthorised")
+              
+            
+                  await AsyncStorage.removeItem("userToken")
+                  await AsyncStorage.removeItem("userID")
+                  failure(new Error("400"))
+              }
+              else if(response.status ===500){
+                
+                failure(new Error("500"))
+              }
+             
+          })
+              .catch((error) => {
+                  console.log(error);
+              })
+          }
+
+
 
    export{
     loginAPI,
@@ -278,5 +357,7 @@ async  function loginAPI  (email, password, success, failure)  {
     addFriend,
     blockUser,
     sendMessage,
-    addMember
+    addMember,
+    newChat,
+    logoutAPI
    }

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserImage } from '../api/getRequests/getRequests';
+import { logoutAPI } from '../api/postRequests/postRequests';
 
 export default class ProfileScreen extends Component {
    
@@ -83,42 +84,68 @@ export default class ProfileScreen extends Component {
           }
     }
     
-
     logout = async () => {
-        console.log("Logout")
-        
-        return fetch("http://localhost:3333/api/1.0.0/logout", {
+     try{
+      const userToken = await AsyncStorage.getItem('userToken');
+      logoutAPI(userToken,() => {
       
-        method: "POST",
-        headers: {
-            "X-Authorization": await AsyncStorage.getItem("userToken")
-        }
-        })
-        .then(async (response) => {
         
-        
-        if(response.status === 200) {
-            await AsyncStorage.removeItem("userToken")
-            await AsyncStorage.removeItem("userID")
+          this.props.navigation.navigate("LoginScreen")
+      }, (error)=> {
+    
+          
+      if (error.message == "400"){
+            console.log("error 400")
             this.props.navigation.navigate("LoginScreen")
         }
-        else if(response.status === 401) {
-            console.log("Unauthorised")
+      else {
+          this.props.navigation.navigate("LoginScreen")
+          throw "Something went wrong"
+      }
+  })
+}
+      catch(error)  {
+          this.setState({"error": error})
+          this.setState({"submitted": false});
+      }
+  }
+
+
+    // logout = async () => {
+    //     console.log("Logout")
+        
+    //     return fetch("http://localhost:3333/api/1.0.0/logout", {
+      
+    //     method: "POST",
+    //     headers: {
+    //         "X-Authorization": await AsyncStorage.getItem("userToken")
+    //     }
+    //     })
+    //     .then(async (response) => {
+        
+        
+    //     if(response.status === 200) {
+    //         await AsyncStorage.removeItem("userToken")
+    //         await AsyncStorage.removeItem("userID")
+    //         this.props.navigation.navigate("LoginScreen")
+    //     }
+    //     else if(response.status === 401) {
+    //         console.log("Unauthorised")
         
       
-            await AsyncStorage.removeItem("userToken")
-            await AsyncStorage.removeItem("userID")
-        }
-        else{
-            this.props.navigation.navigate("LoginScreen")
-            throw "Something went wrong"
-        }
-    })
-        .catch((error) => {
-            this.setState({"error": error})
-            this.setState({"submitted": false});
-        })
-    }
+    //         await AsyncStorage.removeItem("userToken")
+    //         await AsyncStorage.removeItem("userID")
+    //     }
+    //     else{
+    //         this.props.navigation.navigate("LoginScreen")
+    //         throw "Something went wrong"
+    //     }
+    // })
+    //     .catch((error) => {
+    //         this.setState({"error": error})
+    //         this.setState({"submitted": false});
+    //     })
+    // }
 
     render() {
         const { userData, imageUri } = this.state;
@@ -137,7 +164,7 @@ export default class ProfileScreen extends Component {
                         <Text style={styles.bottomButtonText}>Blocked Contacts</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.bottomButton} onPress={() => Alert.alert('Function 2')}>
-                        <Text style={styles.bottomButtonText}>Function 2</Text>
+                        <Text style={styles.bottomButtonText}> Update Picture</Text>
                     </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.logoutButton} onPress={this.logout}>
