@@ -15,7 +15,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Icon from 'react-native-vector-icons/MaterialIcons';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { format, isSameDay } from 'date-fns';
 import { getChatData } from '../api/getRequests/getRequests';
@@ -49,6 +49,7 @@ export default class ChatScreen extends Component {
       this.checkLoggedIn();
       this.getChatDetails();
       this.getUserID();
+      this.retrieveDraft();
       this.intervalId = setInterval(() => {
         this.getChatDetails();
       }, 7000);
@@ -144,6 +145,7 @@ export default class ChatScreen extends Component {
       this.setState({ text: '' });
       this.setState({ submitted: false });
       this.getChatDetails();
+      this.deleteDraft();
       this.forceUpdate();
       this.flatListRef.scrollToEnd({ animated: true });
     }), (error) => {
@@ -309,10 +311,35 @@ export default class ChatScreen extends Component {
     }
   };
 
-  // onHeaderLayout = (event) => {
-  //   this.headerWidth = event.nativeEvent.layout.width;
-  //   this.forceUpdate();
-  // };
+  retrieveDraft = async () => {
+    try {
+      const draftMessage = await AsyncStorage.getItem('draftMessage');
+      if (draftMessage !== null) {
+        this.setState({ text: draftMessage });
+      }
+    } catch (error) {
+      this.showModalWithMessage('Error retrieving draft');
+    }
+  };
+
+  deleteDraft = async () => {
+    try {
+      await AsyncStorage.removeItem('draftMessage');
+    } catch (error) {
+      this.showModalWithMessage('Error deleting draft');
+    }
+  };
+
+  saveDraft = async () => {
+    if (this.state.text) {
+      try {
+        await AsyncStorage.setItem('draftMessage', this.state.text);
+        this.showModalWithMessage('Draft saved successfully');
+      } catch (error) {
+        this.showModalWithMessage('Error saving draft');
+      }
+    }
+  };
 
   render() {
     const { chat, text } = this.state;
@@ -378,7 +405,11 @@ export default class ChatScreen extends Component {
                 && <Text style={styles.error}>*Enter a message</Text>}
           </>
           <TouchableOpacity style={styles.sendButton} onPress={() => this.handleSend()}>
-            <Text style={styles.sendButtonText}>Send</Text>
+            <Icon name="send" style={styles.sendButtonText} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sendButton} onPress={() => this.saveDraft()}>
+            <Icon name="save" style={styles.sendButtonText} />
+
           </TouchableOpacity>
         </View>
       </View>
@@ -412,7 +443,7 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     paddingRight: 15,
     justifyContent: 'center',
-    marginRight: 3, // Add some margin to separate the button and title
+    marginRight: 3,
     // width:10
   },
   leftHeaderButtonText: {
@@ -475,7 +506,7 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 20,
   },
   error: {
     color: 'red',

@@ -92,6 +92,8 @@ export default class ProfileScreen extends Component {
           this.showModalWithMessage('404: Not Found ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '500') {
           this.showModalWithMessage('oops! Something went wrong with server');
         } else {
@@ -109,9 +111,9 @@ export default class ProfileScreen extends Component {
       const id = await AsyncStorage.getItem('userID');
       getUserImage(userToken, id, (imageUri) => {
         this.setState({ isLoading: false });
-        // update newFriends state with the new friend
+
         this.setState({
-          imageUri, // add the new friend to the newFriends array
+          imageUri,
         // eslint-disable-next-line object-curly-newline
         });
       }, (error) => {
@@ -119,6 +121,8 @@ export default class ProfileScreen extends Component {
           this.showModalWithMessage('400: BAD REQUEST');
         } else if (error.message == '404') {
           this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
         } else if (error.message == '500') {

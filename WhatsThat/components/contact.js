@@ -95,9 +95,21 @@ export default class ContactScreen extends Component {
       // alert("running")
       getUserContacts(userToken, (contactData) => {
         this.setState({ contactData, isLoading: false });
+      }, (error) => {
+        if (error.message == '400') {
+          this.showModalWithMessage('400: You can not block yourself');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else {
+          this.showModalWithMessage('oops! Something went wrong');
+        }
       });
     } catch (error) {
-      this.showModalWithMessage('Unexpected Error', error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -110,9 +122,21 @@ export default class ContactScreen extends Component {
       getBlockedUsers(userToken, (blockList) => {
         // eslint-disable-next-line react/no-unused-state
         this.setState({ blockList, isLoading: false });
+      }, (error) => {
+        if (error.message == '400') {
+          this.showModalWithMessage('400: You can not block yourself');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
+        } else if (error.message === '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else {
+          this.showModalWithMessage('oops! Something went wrong');
+        }
       });
     } catch (error) {
-      this.showModalWithMessage('Unexpected Error', error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -122,16 +146,18 @@ export default class ContactScreen extends Component {
 
       blockUser(userToken, item.user_id, () => {
         this.setState({ isLoading: false });
-        // update contactData state with the new friend
+
         this.setState((prevState) => ({
 
-          newlyBlocked: [...prevState.newlyBlocked, item], // add the new friend to the newFriends array
+          newlyBlocked: [...prevState.newlyBlocked, item],
         }));
       }, (error) => {
         if (error.message == '400') {
           this.showModalWithMessage('400: You can not block yourself');
         } else if (error.message == '404') {
           this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
         } else {
@@ -159,6 +185,8 @@ export default class ContactScreen extends Component {
           this.showModalWithMessage('400: You can not block yourself ');
         } else if (error.message == '404') {
           this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
         } else if (error.message == '500') {
@@ -187,6 +215,10 @@ export default class ContactScreen extends Component {
           this.showModalWithMessage('404: Not Found ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
+        } else if (error.message == '400') {
+          this.showModalWithMessage('404: Bad Request ');
         } else if (error.message == '500') {
           this.showModalWithMessage('500: oops! Something went wrong');
         }
@@ -209,6 +241,8 @@ export default class ContactScreen extends Component {
           this.showModalWithMessage('404: Not Found ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '500') {
           this.showModalWithMessage('500: oops! Something went wrong');
         }

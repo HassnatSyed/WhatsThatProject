@@ -24,12 +24,14 @@ async function removeFriend(sessionID, contactID, success, failure) {
     .then(async (response) => {
       if (response.status === 200) {
         success();
-      } else if (response.status === 400) {
-        failure(new Error('400'));
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -53,12 +55,14 @@ async function unblockUser(sessionID, contactID, success, failure) {
     .then(async (response) => {
       if (response.status === 200) {
         success();
-      } else if (response.status === 400) {
-        failure(new Error('400'));
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -92,8 +96,6 @@ async function removeMember(sessionID, chatID, userID, success, failure) {
       }
     })
     .catch((error) => {
-      // eslint-disable-next-line no-console
-      console.log('Error adding user: ', error);
       failure(error);
     });
 }

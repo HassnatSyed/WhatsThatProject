@@ -41,8 +41,14 @@ async function loginAPI(email, password, success, failure) {
 
         // Save user token or other relevant data
         // Navigate to dashboard or home screen
+      } else if (response.status === 401) {
+        failure(new Error('401'));
       } else if (response.status === 400) {
         failure(new Error('400'));
+      } else if (response.status === 404) {
+        failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -74,8 +80,16 @@ async function signUpAPI(firstname, lastname, email, password, success, failure)
         // converting response to JSON
 
         success();
+      } else if (response.status === 401) {
+        failure(new Error('401'));
       } else if (response.status === 400) {
         failure(new Error('400'));
+      } else if (response.status === 404) {
+        failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
+      } else if (response.status === 500) {
+        failure(new Error('500'));
       }
     })
     .catch((error) => {
@@ -100,6 +114,8 @@ async function addFriend(sessionID, contactID, success, failure) {
         failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -126,6 +142,8 @@ async function blockUser(sessionID, contactID, success, failure) {
         failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -159,6 +177,8 @@ async function sendMessage(sessionID, chatId, message, success, failure) {
         failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -185,6 +205,8 @@ async function addMember(sessionID, chatID, userID, success, failure) {
         failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -215,6 +237,10 @@ async function newChat(sessionID, chatName, success, failure) {
         failure(new Error('401'));
       } else if (response.status === 400) {
         failure(new Error('400'));
+      } else if (response.status === 404) {
+        failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }

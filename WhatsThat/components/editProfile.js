@@ -103,6 +103,10 @@ export default class EditProfile extends Component {
       }, (error) => {
         if (error.message == '400') {
           this.showModalWithMessage('400, Error updating Details');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
         } else {
           this.showModalWithMessage('Something went wrong, try later!');
         }

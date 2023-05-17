@@ -97,6 +97,8 @@ export default class ChatInfoScreen extends Component {
       } else if (error.message == '403') {
         this.showModalWithMessage(error, ' You Left the Chat');
         this.props.navigation.navigate('ChatList');
+      } else if (error.message == '401') {
+        this.showModalWithMessage('401:Login Again ');
       } else {
         this.showModalWithMessage('try again');
       }

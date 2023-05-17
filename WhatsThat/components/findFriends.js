@@ -31,17 +31,15 @@ export default class FindFriends extends Component {
       contactData: [],
       // eslint-disable-next-line react/no-unused-state
       currentID: '',
-      // firstView: true,
+
       newFriends: [],
       blockList: [],
-      // newlyBlocked: [],
       offset: 0,
       showModal: false,
       // eslint-disable-next-line react/no-unused-state
       modalMessage: '',
+      scope: 'all',
     };
-
-    // this._onPressButton = this._onPressButton.bind(this)
   }
 
   componentDidMount() {
@@ -105,7 +103,7 @@ export default class FindFriends extends Component {
       const userToken = await AsyncStorage.getItem('userToken');
       // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      searchAllUsers(userToken, this.state.search, 12, this.state.offset, (searchResults) => {
+      searchAllUsers(userToken, this.state.search, this.state.scope, 12, this.state.offset, (searchResults) => {
         this.setState((prevState) => ({
           searchResults: [...prevState.searchResults, ...searchResults],
           isLoading: false,
@@ -115,6 +113,10 @@ export default class FindFriends extends Component {
           this.showModalWithMessage('400: Bad request');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: Forbidden: You do not have access ');
         } else if (error.message == '500') {
           this.showModalWithMessage('oops! Something went wrong with server');
         } else {
@@ -130,7 +132,7 @@ export default class FindFriends extends Component {
     const limit = 12;
     const userToken = await AsyncStorage.getItem('userToken');
     this.setState((prevState) => ({ offset: prevState.offset + limit }), () => {
-      searchAllUsers(userToken, this.state.search, limit, this.state.offset, (newResults) => {
+      searchAllUsers(userToken, this.state.search, this.state.scope, limit, this.state.offset, (newResults) => {
         this.setState((prevState) => ({ searchResults: [...prevState.searchResults, ...newResults] }));
       });
     });
@@ -182,6 +184,8 @@ export default class FindFriends extends Component {
           this.showModalWithMessage('400: You can not unfriend yourself, Bad request');
         } else if (error.message == '404') {
           this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: Forbidden ');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
         } else if (error.message == '500') {
@@ -211,6 +215,8 @@ export default class FindFriends extends Component {
           this.showModalWithMessage('400: Bad request');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '500') {
           this.showModalWithMessage('oops! Something went wrong with server');
         } else {
@@ -236,6 +242,8 @@ export default class FindFriends extends Component {
           this.showModalWithMessage('400: Bad request');
         } else if (error.message == '401') {
           this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: You do not have access ');
         } else if (error.message == '500') {
           this.showModalWithMessage('oops! Something went wrong with server');
         } else {
@@ -336,7 +344,7 @@ export default class FindFriends extends Component {
               renderItem={({ item }) => this.renderSearchResult(item)}
               keyExtractor={(item, index) => index.toString()}
               onEndReached={this.fetchMoreUsers}
-              onEndReachedThreshold={0.3}
+              onEndReachedThreshold={0.5}
             />
           )
           : <Text>No results found</Text>}

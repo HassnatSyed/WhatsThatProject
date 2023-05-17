@@ -36,8 +36,8 @@ async function getUserContacts(sessionID, success, failure) {
     });
 }
 
-async function searchAllUsers(sessionID, search, limit, offset, success, failure) {
-  fetch(`http://localhost:3333/api/1.0.0/search?q=${search}&search_in=all&limit=${limit}&offset=${offset}`, {
+async function searchAllUsers(sessionID, search, scope, limit, offset, success, failure) {
+  fetch(`http://localhost:3333/api/1.0.0/search?q=${search}&search_in=${scope}&limit=${limit}&offset=${offset}`, {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
@@ -82,6 +82,12 @@ async function searchAllUsersChat(sessionID, search, success, failure) {
         success(searchResult);
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
+      } else if (response.status === 404) {
+        failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       } else {
@@ -107,8 +113,12 @@ async function getBlockedUsers(sessionID, success, failure) {
         success(blockedList);
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       } else {
@@ -133,8 +143,12 @@ async function getUserData(sessionID, id, success, failure) {
         // setIsLoading(false);
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       }
@@ -159,6 +173,14 @@ async function getUserImage(sessionID, id, success, failure) {
         success(image);
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
+      } else if (response.status === 404) {
+        failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
+      } else if (response.status === 500) {
+        failure(new Error('500'));
       }
     })
     .catch((error) => {
@@ -179,6 +201,12 @@ async function getChatList(sessionID, success, failure) {
         success(chatList);
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
+      } else if (response.status === 404) {
+        failure(new Error('404'));
+      } else if (response.status === 403) {
+        failure(new Error('403'));
       } else if (response.status === 500) {
         failure(new Error('500'));
       } else {
@@ -204,6 +232,8 @@ async function getChatData(sessionID, chatID, success, failure) {
         success(chatData);
       } else if (response.status === 401) {
         failure(new Error('401'));
+      } else if (response.status === 400) {
+        failure(new Error('400'));
       } else if (response.status === 404) {
         failure(new Error('404'));
       } else if (response.status === 403) {
