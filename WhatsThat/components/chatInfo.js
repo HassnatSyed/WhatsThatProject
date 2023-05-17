@@ -1,4 +1,6 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable eqeqeq */
+/* eslint-disable max-len */
 /* eslint-disable no-sequences */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-use-before-define */
@@ -12,7 +14,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { patchChatDetails } from '../api/patchRequests/patchRequests';
-import { getChatData, getUserContacts, searchAllUsers } from '../api/getRequests/getRequests';
+import { getChatData, getUserContacts, searchAllUsersChat } from '../api/getRequests/getRequests';
 import { addMember } from '../api/postRequests/postRequests';
 import { removeMember } from '../api/deleteRequests/deleteRequest';
 
@@ -35,17 +37,23 @@ export default class ChatInfoScreen extends Component {
 
   componentDidMount() {
     this.unsubscribe = this.props.navigation.addListener('focus', () => {
-      // this.checkLoggedIn();
-      console.log(this.state.chatID);
+      this.checkLoggedIn();
+
       this.getChatDetails();
       this.getContacts();
-      // console.log(chat);
     });
   }
 
   componentWillUnmount() {
     this.unsubscribe();
   }
+
+  checkLoggedIn = async () => {
+    const value = await AsyncStorage.getItem('userToken');
+    if (value == null) {
+      this.props.navigation.navigate('LoginScreen');
+    }
+  };
 
   toggleModal = () => {
     this.setState((prevState) => ({
@@ -75,16 +83,12 @@ export default class ChatInfoScreen extends Component {
 
   getChatDetails = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
+    // eslint-disable-next-line no-unused-vars
     const id = await AsyncStorage.getItem('userID');
-    console.log(userToken, id);
-    console.log('chatid', this.state.chatID);
-    // Do something with userToken and id
-    // alert("running")
+
     getChatData(userToken, this.state.chatID, (chat) => {
-      console.log(chat);
       this.setState({ chat, isLoading: false });
     }), (error) => {
-      console.log('error message', error.message);
       if (error.message == '400') {
         this.showModalWithMessage(error, ' Unauthorised');
       } else if (error.message == '404') {
@@ -102,20 +106,23 @@ export default class ChatInfoScreen extends Component {
   updateChatName = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      console.log('new name', this.state.newName);
       patchChatDetails(this.state.newName, userToken, this.state.chatID, () => {
-        console.log('Updated Chat Name');
         this.forceUpdate();
       }, (error) => {
-        console.log(error);
-        if (error.message === '400') {
-          console.log('error 400');
-        } else {
-          console.log('try again');
+        if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: Forbidden! ');
+        } else if (error.message == '400') {
+          this.showModalWithMessage('400: Cannot Update - Bad request ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -135,21 +142,31 @@ export default class ChatInfoScreen extends Component {
   findUsers = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
 
-      searchAllUsers(userToken, this.state.search, (searchResults) => {
-        console.log(searchResults);
-        console.log('contacts', this.state.contactData);
+      searchAllUsersChat(userToken, this.state.search, (searchResults) => {
         // Filter out the users who are already members of the chat
         const filteredResults = searchResults.filter(
           (user) => !this.isMember(user) && this.isInContactData(user),
         );
 
         this.setState({ searchResults: filteredResults, isLoading: false });
+      }, (error) => {
+        if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: Forbidden! ');
+        } else if (error.message == '400') {
+          this.showModalWithMessage('400: Cannot block yourself ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
+        }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -169,16 +186,22 @@ export default class ChatInfoScreen extends Component {
   getContacts = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
+
       getUserContacts(userToken, (contactData) => {
-        console.log('contactstest', this.state.contactData);
         this.setState({ contactData, isLoading: false });
+      }, (error) => {
+        if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
+        }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -186,14 +209,10 @@ export default class ChatInfoScreen extends Component {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
+
       removeMember(userToken, this.state.chatID, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
-        console.log(id);
-        console.log('asdsafafaf', item.user_id);
+
         if (item.user_id != id) {
           this.getChatDetails();
         } else {
@@ -205,7 +224,6 @@ export default class ChatInfoScreen extends Component {
 
         // this.getContacts()
       }, (error) => {
-        console.log('asffasfa', error);
         if (error.message == '400') {
           this.showModalWithMessage(error, ' Unauthorised');
         } else if (error.message == '403') {
@@ -216,32 +234,35 @@ export default class ChatInfoScreen extends Component {
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('Oops! try again');
     }
   };
 
   addContact = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
+
       addMember(userToken, this.state.chatID, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
         this.getChatDetails();
         // this.forceUpdate()
       }, (error) => {
-        console.log(error);
-        if (error.message === '400') {
-          console.log('error 400');
-        } else {
-          console.log('try again');
+        if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '403') {
+          this.showModalWithMessage('403: Forbidden! ');
+        } else if (error.message == '400') {
+          this.showModalWithMessage('400: Already a member ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -319,7 +340,7 @@ export default class ChatInfoScreen extends Component {
           </View>
           {this.state.searchResults.length > 0
             ? (
-              <ScrollView>
+              <ScrollView style={styles.searchList}>
                 <FlatList
                   data={this.state.searchResults}
                   renderItem={({ item }) => this.renderContact(item)}
@@ -407,6 +428,11 @@ const styles = StyleSheet.create({
   },
   memberList: {
     maxHeight: 200,
+    backgroundColor: '#FFFFFF',
+    marginVertical: 10,
+  },
+  searchList: {
+    maxHeight: 350,
     backgroundColor: '#FFFFFF',
     marginVertical: 10,
   },

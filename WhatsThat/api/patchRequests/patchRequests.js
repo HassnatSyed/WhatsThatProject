@@ -21,11 +21,10 @@ async function patchUserDetails(firstname, lastname, email, password, sessionID,
 
   // Remove any keys with null values from the object
   const filteredToSend = Object.fromEntries(
+    // eslint-disable-next-line no-unused-vars
     Object.entries(toSend).filter(([key, value]) => value),
   );
 
-  console.log(filteredToSend);
-  console.log(sessionID, 'from patchapi');
   fetch(`http://localhost:3333/api/1.0.0/user/${userID}`, {
     method: 'PATCH',
     headers: {
@@ -36,15 +35,13 @@ async function patchUserDetails(firstname, lastname, email, password, sessionID,
   })
     .then(async (response) => {
       if (response.status === 200) {
-        console.log('User Details Updated: ', response);
         success();
       } else if (response.status === 400) {
-        console.log('Details Not Updated ', response);
         failure(new Error('400'));
       }
     })
     .catch((error) => {
-      console.log(error);
+      failure(error);
     });
 }
 
@@ -55,8 +52,6 @@ async function patchChatDetails(chatName, sessionID, chatID, success, failure) {
 
   // Remove any keys with null values from the object
 
-  console.log(toSend);
-  console.log(sessionID, 'from patchapi');
   fetch(`http://localhost:3333/api/1.0.0/chat/${chatID}`, {
     method: 'PATCH',
     headers: {
@@ -67,15 +62,13 @@ async function patchChatDetails(chatName, sessionID, chatID, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 200) {
-        console.log('Chat Details Updated: ', response);
         success();
       } else if (response.status === 400) {
-        console.log('Details Not Updated ', response);
         failure(new Error('400'));
       }
     })
     .catch((error) => {
-      console.log(error);
+      failure(error);
     });
 }
 
@@ -86,8 +79,6 @@ async function patchMessage(messagetxt, messageID, sessionID, chatID, success, f
 
   // Remove any keys with null values from the object
 
-  console.log(toSend);
-  console.log(sessionID, 'from patchapi');
   fetch(`http://localhost:3333/api/1.0.0/chat/${chatID}/message/${messageID}`, {
     method: 'PATCH',
     headers: {
@@ -98,15 +89,13 @@ async function patchMessage(messagetxt, messageID, sessionID, chatID, success, f
   })
     .then(async (response) => {
       if (response.status === 200) {
-        console.log('Message Updated: ', response);
         success();
       } else if (response.status === 400) {
-        console.log('Details Not Updated ', response);
         failure(new Error('400'));
       }
     })
     .catch((error) => {
-      console.log(error);
+      failure(error);
     });
 }
 

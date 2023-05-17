@@ -1,4 +1,5 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable eqeqeq */
 /* eslint-disable no-use-before-define */
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/prop-types */
@@ -7,10 +8,11 @@
 
 import React, { Component } from 'react';
 import {
-  View, Text, Image, TouchableOpacity, StyleSheet,
+  View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getUserImage } from '../api/getRequests/getRequests';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { getUserData, getUserImage } from '../api/getRequests/getRequests';
 import { logoutAPI } from '../api/postRequests/postRequests';
 
 export default class ProfileScreen extends Component {
@@ -20,16 +22,22 @@ export default class ProfileScreen extends Component {
     this.state = {
       userData: {},
       imageUri: null,
+      // eslint-disable-next-line react/no-unused-state
       submitted: false,
+      // eslint-disable-next-line react/no-unused-state
       error: '',
+      showModal: false,
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
     };
   }
 
   componentDidMount() {
     // eslint-disable-next-line react/destructuring-assignment, react/prop-types
     this.unsubscribe = this.props.navigation.addListener('focus', () => {
-      this.getUserData();
+      this.getUserPersonalData();
       this.getImage();
+      this.checkLoggedIn();
     });
   }
 
@@ -37,33 +45,64 @@ export default class ProfileScreen extends Component {
     this.unsubscribe();
   }
 
-  getUserData = async () => {
-    const userToken = await AsyncStorage.getItem('userToken');
-    const id = await AsyncStorage.getItem('userID');
-    const response = await fetch(`http://localhost:3333/api/1.0.0/user/${id}`, {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Authorization': userToken,
-      },
-    });
-    const json = await response.json();
-    this.setState({ userData: json });
+  checkLoggedIn = async () => {
+    const value = await AsyncStorage.getItem('userToken');
+    if (value == null) {
+      this.props.navigation.navigate('LoginScreen');
+    }
   };
 
-  // getUserImage = async () => {
-  //     const userToken = await AsyncStorage.getItem('userToken');
-  //     const id = await AsyncStorage.getItem('userID');
-  //     const response = await fetch(`http://localhost:3333/api/1.0.0/user/${id}/photo`, {
-  //         method: "get",
-  //         headers: {
-  //             "Content-Type": "image/png",
-  //             'X-Authorization': userToken,
-  //         }
-  //     });
-  //     const json = await response.json();
-  //     this.setState({ imageUri: json.uri });
-  // }
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
+
+  onModalDismiss = () => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
+    });
+  };
+
+  showModalWithMessage = (message) => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: message,
+      showModal: true,
+    });
+
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
+  };
+
+  getUserPersonalData = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const id = await AsyncStorage.getItem('userID');
+      getUserData(userToken, id, (userInfo) => {
+        this.setState({ isLoading: false, userData: userInfo });
+        // update newFriends state with the new friend
+      }, (error) => {
+        if (error.message == '400') {
+          this.showModalWithMessage('400: BAD REQUEST');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
+        } else {
+          this.showModalWithMessage('oops! Something went wrong');
+        }
+      });
+    } catch (error) {
+      this.showModalWithMessage('oops! Something went wrong');
+    }
+  };
+
   getImage = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
@@ -71,18 +110,25 @@ export default class ProfileScreen extends Component {
       getUserImage(userToken, id, (imageUri) => {
         this.setState({ isLoading: false });
         // update newFriends state with the new friend
-        this.setState({ imageUri, // add the new friend to the newFriends array
+        this.setState({
+          imageUri, // add the new friend to the newFriends array
+        // eslint-disable-next-line object-curly-newline
         });
       }, (error) => {
-        console.log(error);
-        if (error.message === '400') {
-          console.log('error 400');
+        if (error.message == '400') {
+          this.showModalWithMessage('400: BAD REQUEST');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
         } else {
-          console.log('try again');
+          this.showModalWithMessage('oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -93,7 +139,6 @@ export default class ProfileScreen extends Component {
         this.props.navigation.navigate('LoginScreen');
       }, (error) => {
         if (error.message === '400') {
-          console.log('error 400');
           this.props.navigation.navigate('LoginScreen');
         } else {
           this.props.navigation.navigate('LoginScreen');
@@ -101,15 +146,44 @@ export default class ProfileScreen extends Component {
         }
       });
     } catch (error) {
+      // eslint-disable-next-line react/no-unused-state
       this.setState({ error });
-      this.setState({ submitted: false });
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
   render() {
     const { userData, imageUri } = this.state;
+    if (this.state.isLoading) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      );
+    }
     return (
       <View style={styles.container}>
+        <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+          <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          >
+            <View style={{
+              backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, alignItems: 'center',
+            }}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 14 }}>{this.state.modalMessage}</Text>
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={{
+                  backgroundColor: '#F44336', padding: 10, marginTop: 10, borderRadius: 5,
+                }}
+              >
+                <Icon name="close" size={16} color="#FFFFFF" style={{ fontWeight: 'bold' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         {imageUri && (
         // eslint-disable-next-line react/destructuring-assignment
         <Image source={{ uri: this.state.imageUri }} style={styles.profileImage} />

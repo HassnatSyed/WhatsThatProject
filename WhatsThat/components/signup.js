@@ -1,4 +1,5 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable react/sort-comp */
 /* eslint-disable prefer-regex-literals */
 /* eslint-disable react/jsx-no-useless-fragment */
 /* eslint-disable eqeqeq */
@@ -12,9 +13,9 @@
 /* eslint-disable react/jsx-filename-extension */
 import React, { Component } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Modal,
 } from 'react-native';
-
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as EmailValidator from 'email-validator';
 import { signUpAPI } from '../api/postRequests/postRequests';
 
@@ -30,11 +31,40 @@ export default class SignupScreen extends Component {
       submitted: false,
       firstname: '',
       lastname: '',
+      showModal: false,
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
 
     };
 
     this.onPressButton = this.onPressButton.bind(this);
   }
+
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
+
+  onModalDismiss = () => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
+    });
+  };
+
+  showModalWithMessage = (message) => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: message,
+      showModal: true,
+    });
+
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
+  };
 
   onPressButton() {
     this.setState({ submitted: true });
@@ -60,31 +90,20 @@ export default class SignupScreen extends Component {
       return;
     }
 
-    // if(!PASSWORD_REGEX.test(this.state.confirmPassword)){
-    //     this.setState({error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)"})
-    //     return;
-    // }
-
-    // if(confirmPassword != password){
-    //     this.setState({error: "Password do not match"})
-    //     return;
-    // }
-
-    console.log(`Button clicked: ${this.state.email} ${this.state.password}`);
-    console.log('Validated and ready to send to the API');
     this.signup();
   }
 
   signup = () => {
     signUpAPI(this.state.firstname, this.state.lastname, this.state.email, this.state.password, () => {
-      console.log('navigate to homescreen');
-      this.props.navigation.navigate('LoginScreen');
+      this.showModalWithMessage(' Registeration Complete');
+      setTimeout(() => {
+        this.props.navigation.navigate('LoginScreen');
+      }, 3000);
     }, (error) => {
-      console.log(error);
       if (error.message == '400') {
-        console.log('error 400');
+        this.showModalWithMessage('Email Already exists');
       } else {
-        console.log('try again');
+        this.showModalWithMessage('Server Error');
       }
     });
   };
@@ -96,8 +115,29 @@ export default class SignupScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-
+        <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+          <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          >
+            <View style={{
+              backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, alignItems: 'center',
+            }}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 14 }}>{this.state.modalMessage}</Text>
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={{
+                  backgroundColor: '#F44336', padding: 10, marginTop: 10, borderRadius: 5,
+                }}
+              >
+                <Icon name="close" size={16} color="#FFFFFF" style={{ fontWeight: 'bold' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.formContainer}>
+          <Text style={styles.loginTitle}>Enter Your Details to Register</Text>
           <View style={styles.email}>
             <Text>Email:</Text>
             <TextInput
@@ -128,23 +168,6 @@ export default class SignupScreen extends Component {
                                 && <Text style={styles.error}>*Password is required</Text>}
             </>
           </View>
-
-          {/* <View style = {styles.password}>
-                        <Text>Confirm Password</Text>
-                        <TextInput
-                            style={{height: 40, borderWidth: 1, width: "100%"}}
-                            placeholder="Confirm password"
-                            onChangeText={confirmPassword => this.setState({confirmPassword})}
-                            defaultValue={this.state.confirmPassword}
-                            secureTextEntry
-                        />
-
-                        <>
-                            {this.state.submitted && !this.state.password &&
-                                <Text style={styles.error}>*Password confirmation is required</Text>
-                            }
-                        </>
-                    </View> */}
 
           <View style={styles.password}>
             <Text>Firstname</Text>
@@ -209,6 +232,11 @@ const styles = StyleSheet.create({
   formContainer: {
 
   },
+  loginTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
   email: {
     marginBottom: 5,
   },
@@ -223,8 +251,9 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   button: {
-    marginBottom: 30,
+    marginBottom: 10,
     backgroundColor: '#2196F3',
+    borderRadius: 10,
   },
   buttonText: {
     textAlign: 'center',

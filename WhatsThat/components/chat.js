@@ -1,4 +1,8 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable react/jsx-no-useless-fragment */
+/* eslint-disable react/sort-comp */
+/* eslint-disable eqeqeq */
+/* eslint-disable max-len */
 /* eslint-disable no-sequences */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-use-before-define */
@@ -8,11 +12,13 @@
 /* eslint-disable react/jsx-filename-extension */
 import React, { Component } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, ScrollView, Modal,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { format, isSameDay } from 'date-fns';
-import { getChatData, getUserContacts } from '../api/getRequests/getRequests';
+import { getChatData } from '../api/getRequests/getRequests';
 import { sendMessage } from '../api/postRequests/postRequests';
 import { patchMessage } from '../api/patchRequests/patchRequests';
 import { deleteMessage } from '../api/deleteRequests/deleteRequest';
@@ -32,21 +38,20 @@ export default class ChatScreen extends Component {
       userID: '',
 
     };
-    this.lastAuthorId = null;
-    this.headerWidth = 0;
+    // this.lastAuthorId = null;
+    // eslint-disable-next-line react/no-unused-class-component-methods
+    // this.headerWidth = 0;
     this.lastDisplayedDate = null;
   }
 
   componentDidMount() {
     this.unsubscribe = this.props.navigation.addListener('focus', () => {
       this.checkLoggedIn();
-      console.log(this.state.chatID);
       this.getChatDetails();
       this.getUserID();
-      console.log('user id test', this.state.userID);
       this.intervalId = setInterval(() => {
         this.getChatDetails();
-      }, 5000);
+      }, 7000);
     });
     this.blurListener = this.props.navigation.addListener('blur', () => {
       clearInterval(this.intervalId);
@@ -69,9 +74,8 @@ export default class ChatScreen extends Component {
     try {
       const userID = await AsyncStorage.getItem('userID');
       this.setState({ userID });
-      console.log('user id tesssst', this.state.userID);
     } catch (error) {
-      console.error(error);
+      this.showModalWithMessage(error);
     }
   }
 
@@ -96,7 +100,7 @@ export default class ChatScreen extends Component {
     setTimeout(() => {
       this.onModalDismiss();
       this.toggleModal();
-    }, 3000);
+    }, 2000);
   };
 
   checkLoggedIn = async () => {
@@ -108,32 +112,34 @@ export default class ChatScreen extends Component {
 
   getChatDetails = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
+    // eslint-disable-next-line no-unused-vars
     const id = await AsyncStorage.getItem('userID');
-    console.log(userToken, id);
-    // Do something with userToken and id
-    // alert("running")
+
     getChatData(userToken, this.state.chatID, (chat) => {
-      console.log(chat);
+      // eslint-disable-next-line react/no-unused-state
       this.setState({ chat, isLoading: false }, () => {
         this.flatListRef.scrollToEnd({ animated: true });
       });
     }), (error) => {
-      console.log(error);
       if (error.message == '400') {
-        console.log('error 400');
+        this.showModalWithMessage('400: BAD REQUEST');
+      } else if (error.message == '404') {
+        this.showModalWithMessage('404: Not Found ');
+      } else if (error.message == '401') {
+        this.showModalWithMessage('401: Login Again ');
+      } else if (error.message == '500') {
+        this.showModalWithMessage('oops! Something went wrong with server');
       } else {
-        console.log('try again');
+        this.showModalWithMessage('oops! Something went wrong');
       }
     };
   };
 
   postMessage = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
+    // eslint-disable-next-line no-unused-vars
     const id = await AsyncStorage.getItem('userID');
-    console.log(userToken, id);
-    // Do something with userToken and id
-    // alert("running")
-    console.log(this.state.text);
+
     sendMessage(userToken, this.state.chatID, this.state.text, () => {
       this.setState({ text: '' });
       this.setState({ submitted: false });
@@ -141,30 +147,29 @@ export default class ChatScreen extends Component {
       this.forceUpdate();
       this.flatListRef.scrollToEnd({ animated: true });
     }), (error) => {
-      console.log(error);
       if (error.message == '400') {
-        console.log('error 400');
+        this.showModalWithMessage('400: BAD REQUEST');
+      } else if (error.message == '404') {
+        this.showModalWithMessage('404: Not Found ');
+      } else if (error.message == '401') {
+        this.showModalWithMessage('401: Login Again ');
+      } else if (error.message == '500') {
+        this.showModalWithMessage('oops! Something went wrong with server');
       } else {
-        console.log('try again');
+        this.showModalWithMessage('oops! Something went wrong');
       }
     };
   };
 
   handleSend = () => {
-    // Do something with this.state.text
     this.setState({ submitted: true });
-    console.log(this.state.text);
+
     if (this.state.text) {
       this.postMessage();
-      console.log('message sent');
-
-      // this.forceUpdate();
     }
   };
 
   renderMessage = ({ item, index }) => {
-    console.log('user id teaaaaast', this.state.userID);
-    console.log('auther id test', item.author.user_id);
     // eslint-disable-next-line eqeqeq
     const isCurrentUser = item.author.user_id == this.state.userID;
     // eslint-disable-next-line max-len
@@ -253,53 +258,61 @@ export default class ChatScreen extends Component {
         return;
       }
       const userToken = await AsyncStorage.getItem('userToken');
-      const id = await AsyncStorage.getItem('userID');
+      // const id = await AsyncStorage.getItem('userID');
 
       patchMessage(this.state.editingMessage, this.state.editingMessageId, userToken, this.state.chatID, () => {
-        console.log('Updated message');
         this.setState({ editingMessageId: null, editingMessage: null }); // Reset editing state
         this.getChatDetails(); // Refresh chat data after editing
         this.showModalWithMessage('Message Updated'); // Show the modal
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
+          this.showModalWithMessage('400: BAD REQUEST');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
         } else {
-          console.log('try again');
+          this.showModalWithMessage('oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
   deleteThisMessage = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      const id = await AsyncStorage.getItem('userID');
+      // const id = await AsyncStorage.getItem('userID');
 
       deleteMessage(this.state.editingMessageId, userToken, this.state.chatID, () => {
-        console.log('Deleted message');
         this.setState({ editingMessageId: null, editingMessage: null }); // Reset editing state
         this.getChatDetails(); // Refresh chat data after editing
         this.showModalWithMessage('Message Deleted');
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
+          this.showModalWithMessage('400: BAD REQUEST');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
         } else {
-          console.log('try again');
+          this.showModalWithMessage('oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
-  onHeaderLayout = (event) => {
-    this.headerWidth = event.nativeEvent.layout.width;
-    this.forceUpdate();
-  };
+  // onHeaderLayout = (event) => {
+  //   this.headerWidth = event.nativeEvent.layout.width;
+  //   this.forceUpdate();
+  // };
 
   render() {
     const { chat, text } = this.state;
@@ -311,14 +324,10 @@ export default class ChatScreen extends Component {
         </View>
       );
     }
-    console.log(this.state.chat);
-    // Calculate the left header button width and adjust maxNameLength
-    // const leftHeaderButtonWidth = 60; // Adjust this value to the total width of the left header button
-    // const maxNameLength = this.headerWidth ? this.headerWidth - leftHeaderButtonWidth - 60 : 15; // Increase the subtraction value for more space
-    // const truncatedName = chat.name.length > maxNameLength ? `${chat.name.substring(0, maxNameLength - 3)}...` : chat.name;
 
     return (
       <View style={styles.container}>
+
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.leftHeaderButton}
@@ -341,9 +350,7 @@ export default class ChatScreen extends Component {
           >
             <View style={{ backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8 }}>
               <Text>{this.state.modalMessage}</Text>
-              <TouchableOpacity onPress={this.toggleModal}>
-                <Text>Close </Text>
-              </TouchableOpacity>
+
             </View>
           </View>
         </Modal>
@@ -362,6 +369,7 @@ export default class ChatScreen extends Component {
             style={styles.textInput}
             placeholder="Type your message here"
             value={text}
+            // eslint-disable-next-line no-shadow
             onChangeText={(text) => this.setState({ text })}
             multiline
           />

@@ -18,8 +18,6 @@ async function loginAPI(email, password, success, failure) {
     password,
   };
 
-  console.log(toSend);
-
   fetch('http://localhost:3333/api/1.0.0/login', {
     method: 'post',
     headers: {
@@ -29,7 +27,6 @@ async function loginAPI(email, password, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 200) {
-        console.log('User logged in: ', response);
         // alert("Login successful!");
 
         // converting response to JSON
@@ -39,22 +36,19 @@ async function loginAPI(email, password, success, failure) {
         // stores the session token and user id
         AsyncStorage.setItem('userID', id);
         AsyncStorage.setItem('userToken', sessionID);
-        console.log(sessionID, 'from login');
-        // console.log(sessionID, id, responseJson);
+
         success();
 
         // Save user token or other relevant data
         // Navigate to dashboard or home screen
       } else if (response.status === 400) {
-        console.log('Login failed: ', response);
         failure(new Error('400'));
       } else if (response.status === 500) {
-        console.log('Login failed: ', response);
         failure(new Error('500'));
       }
     })
     .catch((error) => {
-      console.log(error);
+      failure(error);
     });
 }
 async function signUpAPI(firstname, lastname, email, password, success, failure) {
@@ -68,8 +62,6 @@ async function signUpAPI(firstname, lastname, email, password, success, failure)
     password,
   };
 
-  console.log(toSend);
-
   fetch('http://localhost:3333/api/1.0.0/user', {
     method: 'post',
     headers: {
@@ -79,29 +71,19 @@ async function signUpAPI(firstname, lastname, email, password, success, failure)
   })
     .then(async (response) => {
       if (response.status === 201) {
-        console.log('User Signed Up: ', response);
-        // alert("Login successful!");
-
         // converting response to JSON
 
-        // console.log(sessionID, id, responseJson);
         success();
-
-        // Save user token or other relevant data
-        // Navigate to dashboard or home screen
       } else if (response.status === 400) {
-        console.log('SignUp Failed ', response);
         failure(new Error('400'));
       }
     })
     .catch((error) => {
-      console.log(error);
+      failure(error);
     });
 }
 
 async function addFriend(sessionID, contactID, success, failure) {
-  console.log('logging id passed', contactID);
-
   fetch(`http://localhost:3333/api/1.0.0/user/${contactID}/contact`, {
     method: 'post',
     headers: {
@@ -111,32 +93,23 @@ async function addFriend(sessionID, contactID, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 200) {
-        // const searchResult = await response.json();
         success();
-        // console.log(searchResult);
-        // setIsLoading(false);
       } else if (response.status === 401) {
-        console.log('Unauthorized! Please Login ', response);
         failure(new Error('401'));
       } else if (response.status === 400) {
-        console.log('Cannot add yourself as a friend', response);
         failure(new Error('400'));
       } else if (response.status === 404) {
-        console.log('User Not Found ', response);
         failure(new Error('404'));
       } else if (response.status === 500) {
-        console.log('Server Error ', response);
         failure(new Error('500'));
       }
     })
     .catch((error) => {
-      console.log('Error adding user: ', error);
+      failure(error);
     });
 }
 
 async function blockUser(sessionID, contactID, success, failure) {
-  console.log('logging id passed', contactID);
-
   fetch(`http://localhost:3333/api/1.0.0/user/${contactID}/block`, {
     method: 'post',
     headers: {
@@ -146,34 +119,25 @@ async function blockUser(sessionID, contactID, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 200) {
-        // const searchResult = await response.json();
         success();
-        // console.log(searchResult);
-        // setIsLoading(false);
       } else if (response.status === 401) {
-        console.log('Unauthorized! Please Login ', response);
         failure(new Error('401'));
       } else if (response.status === 400) {
-        console.log('Cannot block yourself or users not in your contacts', response);
         failure(new Error('400'));
       } else if (response.status === 404) {
-        console.log('User Not Found ', response);
         failure(new Error('404'));
       } else if (response.status === 500) {
-        console.log('Server Error ', response);
         failure(new Error('500'));
       }
     })
     .catch((error) => {
-      console.log('Error blocking user: ', error);
+      failure(error);
     });
 }
 
 async function sendMessage(sessionID, chatId, message, success, failure) {
-  console.log('logging id passed', chatId);
   const toSend = {
-    // email: this.state.email,
-    // password: this.state.password
+
     message,
 
   };
@@ -188,32 +152,23 @@ async function sendMessage(sessionID, chatId, message, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 200) {
-        // const searchResult = await response.json();
         success();
-        // console.log(searchResult);
-        // setIsLoading(false);
       } else if (response.status === 401) {
-        console.log('Unauthorized! Please Login ', response);
         failure(new Error('401'));
       } else if (response.status === 400) {
-        console.log('Cannot add yourself as a friend', response);
         failure(new Error('400'));
       } else if (response.status === 404) {
-        console.log('User Not Found ', response);
         failure(new Error('404'));
       } else if (response.status === 500) {
-        console.log('Server Error ', response);
         failure(new Error('500'));
       }
     })
     .catch((error) => {
-      console.log('Error adding user: ', error);
+      failure(error);
     });
 }
 
 async function addMember(sessionID, chatID, userID, success, failure) {
-  console.log('logging id passed', userID);
-
   fetch(`http://localhost:3333/api/1.0.0/chat/${chatID}/user/${userID}`, {
     method: 'post',
     headers: {
@@ -223,32 +178,24 @@ async function addMember(sessionID, chatID, userID, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 200) {
-        // const searchResult = await response.json();
         success();
-        // console.log(searchResult);
-        // setIsLoading(false);
       } else if (response.status === 401) {
-        console.log('Unauthorized! Please Login ', response);
         failure(new Error('401'));
       } else if (response.status === 400) {
-        console.log('If user not already a member, Add user as friend', response);
         failure(new Error('400'));
       } else if (response.status === 404) {
-        console.log('User Not Found ', response);
         failure(new Error('404'));
       } else if (response.status === 500) {
-        console.log('Server Error ', response);
         failure(new Error('500'));
       }
     })
     .catch((error) => {
-      console.log('Error adding user: ', error);
+      failure(error);
     });
 }
 async function newChat(sessionID, chatName, success, failure) {
   const toSend = {
-    // email: this.state.email,
-    // password: this.state.password
+
     name: chatName,
 
   };
@@ -263,29 +210,21 @@ async function newChat(sessionID, chatName, success, failure) {
   })
     .then(async (response) => {
       if (response.status === 201) {
-        // const searchResult = await response.json();
         success();
-        // console.log(searchResult);
-        // setIsLoading(false);
       } else if (response.status === 401) {
-        console.log('Unauthorized! Please Login ', response);
         failure(new Error('401'));
       } else if (response.status === 400) {
-        console.log('Bad Request', response);
         failure(new Error('400'));
       } else if (response.status === 500) {
-        console.log('Server Error ', response);
         failure(new Error('500'));
       }
     })
     .catch((error) => {
-      console.log('Error creating chat: ', error);
+      failure(error);
     });
 }
 
 async function logoutAPI(sessionID, success, failure) {
-  console.log('Logout');
-
   fetch('http://localhost:3333/api/1.0.0/logout', {
 
     method: 'POST',
@@ -300,8 +239,6 @@ async function logoutAPI(sessionID, success, failure) {
 
         success();
       } else if (response.status === 401) {
-        console.log('Unauthorised');
-
         await AsyncStorage.removeItem('userToken');
         await AsyncStorage.removeItem('userID');
         failure(new Error('400'));
@@ -310,7 +247,7 @@ async function logoutAPI(sessionID, success, failure) {
       }
     })
     .catch((error) => {
-      console.log(error);
+      failure(error);
     });
 }
 

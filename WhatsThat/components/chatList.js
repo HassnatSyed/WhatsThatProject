@@ -1,4 +1,11 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable camelcase */
+/* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable react/prefer-stateless-function */
+/* eslint-disable linebreak-style */
+/* eslint-disable react/no-access-state-in-setstate */
+/* eslint-disable react/sort-comp */
+/* eslint-disable eqeqeq */
 /* eslint-disable max-len */
 /* eslint-disable no-sequences */
 /* eslint-disable no-unused-expressions */
@@ -25,12 +32,15 @@ export default class ChatList extends Component {
       isLoading: true,
       newChatName: '',
       isModalVisible: false,
+      showModal: false,
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
     };
   }
 
   componentDidMount() {
     this.unsubscribe = this.props.navigation.addListener('focus', () => {
-      // this.checkLoggedIn();
+      this.checkLoggedIn();
       this.getUserChatList();
     });
   }
@@ -43,12 +53,30 @@ export default class ChatList extends Component {
     this.setState({ isModalVisible: false });
   };
 
-  handleConfirm = () => {
-  // Perform API call or further processing with this.state.newChatName
-  // ...
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
 
-    // Close the modal
-    this.closeModal();
+  onModalDismiss = () => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
+    });
+  };
+
+  showModalWithMessage = (message) => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: message,
+      showModal: true,
+    });
+
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
   };
 
   componentWillUnmount() {
@@ -64,29 +92,19 @@ export default class ChatList extends Component {
 
   getUserChatList = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
-    const id = await AsyncStorage.getItem('userID');
-    console.log(userToken, id);
-    // Do something with userToken and id
-    // alert("running")
+
     getChatList(userToken, (chatList) => {
-      console.log(chatList);
       this.setState({ chatList, isLoading: false });
     }), (error) => {
-      console.log(error);
       if (error.message == '400') {
-        console.log('error 400');
+        this.showModalWithMessage('Bad Request 400');
       } else {
-        console.log('try again');
+        this.showModalWithMessage('Something went wrong, try again');
       }
     };
   };
 
-  handleHeaderPress = () => {
-    console.log('Header button pressed');
-  };
-
   handleChatPress = (chat) => {
-    console.log(`Chat ${chat.chat_id} pressed`);
     this.props.navigation.navigate('ChatScreen', { chat_id: chat.chat_id });
   };
 
@@ -117,20 +135,16 @@ export default class ChatList extends Component {
 
   createNewChat = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
-    const id = await AsyncStorage.getItem('userID');
-    console.log(userToken, id);
-    // Do something with userToken and id
-    // alert("running")
+
     newChat(userToken, this.state.newChatName, () => {
       this.setState({ newChatName: '' });
       this.closeModal();
       this.getUserChatList();
     }), (error) => {
-      console.log(error);
       if (error.message == '400') {
-        console.log('error 400');
+        this.showModalWithMessage('error 400');
       } else {
-        console.log('try again');
+        this.showModalWithMessage('try again');
       }
     };
   };
@@ -146,6 +160,27 @@ export default class ChatList extends Component {
     }
     return (
       <View style={styles.container}>
+        <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+          <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          >
+            <View style={{
+              backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, alignItems: 'center',
+            }}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 14 }}>{this.state.modalMessage}</Text>
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={{
+                  backgroundColor: '#F44336', padding: 10, marginTop: 10, borderRadius: 5,
+                }}
+              >
+                <Icon name="close" size={16} color="#FFFFFF" style={{ fontWeight: 'bold' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.header}>
           <Text style={styles.headerText}>Chats</Text>
           <TouchableOpacity style={styles.headerButton} onPress={this.openModal}>
@@ -168,6 +203,7 @@ export default class ChatList extends Component {
                 style={styles.textInput}
                 value={newChatName}
                 placeholder="Type your Chat name here"
+                // eslint-disable-next-line no-shadow
                 onChangeText={(newChatName) => this.setState({ newChatName })}
               />
               <TouchableOpacity style={styles.confirmButton} onPress={this.createNewChat}>

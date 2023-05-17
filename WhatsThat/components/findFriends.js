@@ -1,6 +1,6 @@
+/* eslint-disable linebreak-style */
 /* eslint-disable react/sort-comp */
 /* eslint-disable eqeqeq */
-/* eslint-disable linebreak-style */
 /* eslint-disable max-len */
 /* eslint-disable no-sequences */
 /* eslint-disable no-unused-expressions */
@@ -11,9 +11,10 @@
 /* eslint-disable react/jsx-filename-extension */
 import React, { Component } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getBlockedUsers, searchAllUsers, getUserContacts } from '../api/getRequests/getRequests';
 import { addFriend } from '../api/postRequests/postRequests';
 
@@ -28,11 +29,16 @@ export default class FindFriends extends Component {
       isLoading: true,
       search: '',
       contactData: [],
+      // eslint-disable-next-line react/no-unused-state
       currentID: '',
-      firstView: true,
+      // firstView: true,
       newFriends: [],
       blockList: [],
-      newlyBlocked: [],
+      // newlyBlocked: [],
+      offset: 0,
+      showModal: false,
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
     };
 
     // this._onPressButton = this._onPressButton.bind(this)
@@ -43,7 +49,7 @@ export default class FindFriends extends Component {
       this.checkLoggedIn();
       this.userContacts();
       this.getBlockLists();
-      this.setState({ firstView: true });
+      // this.setState({ firstView: true });
     });
   }
 
@@ -58,14 +64,32 @@ export default class FindFriends extends Component {
     }
   };
 
-  //   isNotSelf = async(item) => {
-  //     try {
-  //     const id = await AsyncStorage.getItem('userID');
-  //     if(id!=item.user_id)
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
 
-  //     }
-  //     catch(error){}
-  //   }
+  onModalDismiss = () => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
+    });
+  };
+
+  showModalWithMessage = (message) => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: message,
+      showModal: true,
+    });
+
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
+  };
+
   isFriend(item) {
     return this.state.contactData.some((contact) => contact.user_id === item.user_id);
   }
@@ -73,60 +97,51 @@ export default class FindFriends extends Component {
   isNewFriend = (item) => this.state.newFriends.some((friend) => friend.user_id === item.user_id);
 
   isBlocked(item) {
-    console.log('runrunrunblock');
     return this.state.blockList.some((blockedUser) => blockedUser.user_id === item.user_id);
   }
-
-  // isNewlyBlocked = (item) => this.state.newlyBlocked.some((newBlocked) => newBlocked.user_id === item.user_id);
 
   findUsers = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
-      searchAllUsers(userToken, this.state.search, (searchResults) => {
-        console.log(searchResults);
-        this.setState({ searchResults, isLoading: false });
+      searchAllUsers(userToken, this.state.search, 12, this.state.offset, (searchResults) => {
+        this.setState((prevState) => ({
+          searchResults: [...prevState.searchResults, ...searchResults],
+          isLoading: false,
+        }));
+      }, (error) => {
+        if (error.message == '400') {
+          this.showModalWithMessage('400: Bad request');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
+        } else {
+          this.showModalWithMessage('oops! Something went wrong');
+        }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
-  // renderSearchResult(item) {
-
-  //     if (this.isFriend(item) || this.currentID == item.user_id ) {
-  //         console.log(item),"testing";
-  //         return null; // Do not render the search result
-
-  //     }
-  //     return (
-  //         <View style={styles.searchResult}>
-  //             <Text style={styles.userItem}>{item.given_name} {item.family_name}</Text>
-  //             {/* <Text style={styles.userItem}>{item.email}</Text> */}
-  //             <View style={styles.buttonContainer}>
-  //                 <TouchableOpacity onPress={() => this.addAsFriend(item)}>
-  //                     <Text style={styles.buttonText}>Add Friend</Text>
-  //                 </TouchableOpacity>
-  //                 <TouchableOpacity onPress={() => this.handleButtonClick(item)}>
-  //                     <Text style={styles.buttonText}>Button 2</Text>
-  //                 </TouchableOpacity>
-  //             </View>
-  //         </View>
-  //     );
-  // }
+  fetchMoreUsers = async () => {
+    const limit = 12;
+    const userToken = await AsyncStorage.getItem('userToken');
+    this.setState((prevState) => ({ offset: prevState.offset + limit }), () => {
+      searchAllUsers(userToken, this.state.search, limit, this.state.offset, (newResults) => {
+        this.setState((prevState) => ({ searchResults: [...prevState.searchResults, ...newResults] }));
+      });
+    });
+  };
 
   addAsFriend = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
       addFriend(userToken, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
         // update newFriends state with the new friend
         this.setState((prevState) => ({
@@ -134,43 +149,49 @@ export default class FindFriends extends Component {
           newFriends: [...prevState.newFriends, item], // add the new friend to the newFriends array
         }));
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
+          this.showModalWithMessage('400: You can add yourself friend - BAD REQUEST');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
         } else {
-          console.log('try again');
+          this.showModalWithMessage('oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
   removeFromFriend = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
       removeFriend(userToken, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
         // update newFriends state by  removing friend
         this.setState((prevState) => ({
-          // contactData: [...prevState.contactData, item],
           newFriends: prevState.newFriends.filter((friend) => friend.user_id !== item.user_id), // remove the item from the newFriends array
         }));
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
+          this.showModalWithMessage('400: You can not unfriend yourself, Bad request');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
         } else {
-          console.log('try again');
+          this.showModalWithMessage('oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -178,17 +199,26 @@ export default class FindFriends extends Component {
   userContacts = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
       this.currentID = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
       // Do something with userToken and id
       // alert("running")
       getUserContacts(userToken, (contactData) => {
-        console.log(contactData);
         this.setState({ contactData, isLoading: false });
+      }, (error) => {
+        if (error.message == '400') {
+          this.showModalWithMessage('400: Bad request');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
+        } else {
+          this.showModalWithMessage('oops! Something went wrong');
+        }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -196,83 +226,29 @@ export default class FindFriends extends Component {
   getBlockLists = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
+      // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');
       this.currentID = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
       getBlockedUsers(userToken, (blockList) => {
-        console.log(blockList, 'blocccccccck');
         this.setState({ blockList, isLoading: false });
+      }, (error) => {
+        if (error.message == '400') {
+          this.showModalWithMessage('400: Bad request');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('oops! Something went wrong with server');
+        } else {
+          this.showModalWithMessage('oops! Something went wrong');
+        }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
-  // addToBlockList = async (item) => {
-  //   try {
-  //     const userToken = await AsyncStorage.getItem('userToken');
-  //     const id = await AsyncStorage.getItem('userID');
-  //     console.log(userToken, id);
-  //     // Do something with userToken and id
-  //     // alert("running")
-  //     blockUser(userToken, item.user_id, () => {
-  //       console.log(item.user_id, 'the user id');
-  //       this.setState({ isLoading: false });
-  //       // update contactData state with the new friend
-  //       this.setState((prevState) => ({
-  //         // contactData: [...prevState.contactData, item],
-  //         newlyBlocked: [...prevState.newlyBlocked, item], // add the new friend to the newFriends array
-  //       }));
-  //     }, (error) => {
-  //       console.log(error);
-  //       if (error.message == '400') {
-  //         console.log('error 400');
-  //       } else {
-  //         console.log('try again');
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
-  // removeFromBlockList = async (item) => {
-  //   try {
-  //     const userToken = await AsyncStorage.getItem('userToken');
-  //     const id = await AsyncStorage.getItem('userID');
-  //     console.log(userToken, id);
-  //     // Do something with userToken and id
-  //     // alert("running")
-  //     unblockUser(userToken, item.user_id, () => {
-  //       console.log(item.user_id, 'the user id');
-  //       this.setState({ isLoading: false });
-  //       // update newlyBlocked state by  unblocking user
-  //       this.setState((prevState) => ({
-  //         // contactData: [...prevState.contactData, item],
-  //         newlyBlocked: prevState.newlyBlocked.filter((blockedUser) => blockedUser.user_id !== item.user_id), // remove the item from the newFriends array
-  //       }));
-  //     }, (error) => {
-  //       console.log(error);
-  //       if (error.message == '400') {
-  //         console.log('error 400');
-  //       } else {
-  //         console.log('try again');
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   renderSearchResult(item) {
-    // if (this.currentID === item.user_id && !firstView ) {
-    //     return null; // Do not render the search result
-    // }
-    // else
     if (this.isFriend(item) || this.currentID == item.user_id || this.isBlocked(item)) {
-      console.log(item), 'testing';
       return null; // Do not render the search result
     }
     return (
@@ -308,6 +284,27 @@ export default class FindFriends extends Component {
     }
     return (
       <View style={styles.container}>
+        <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+          <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          >
+            <View style={{
+              backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, alignItems: 'center',
+            }}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 14 }}>{this.state.modalMessage}</Text>
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={{
+                  backgroundColor: '#F44336', padding: 10, marginTop: 10, borderRadius: 5,
+                }}
+              >
+                <Icon name="close" size={16} color="#FFFFFF" style={{ fontWeight: 'bold' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.headerContainer}>
           <Text style={styles.header}>Find Friends</Text>
         </View>
@@ -338,6 +335,8 @@ export default class FindFriends extends Component {
               data={this.state.searchResults}
               renderItem={({ item }) => this.renderSearchResult(item)}
               keyExtractor={(item, index) => index.toString()}
+              onEndReached={this.fetchMoreUsers}
+              onEndReachedThreshold={0.3}
             />
           )
           : <Text>No results found</Text>}
@@ -361,19 +360,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
-  // headerContainer: {
-  //   backgroundColor: '#4CAF50',
-  //   paddingHorizontal: 20,
-  //   paddingVertical: 10,
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  // },
-  // header: {
-  //   fontSize: 26,
-  //   fontWeight: 'bold',
-  //   color: '#FFFFFF',
-  // },
   headerContainer: {
     marginBottom: 20,
   },

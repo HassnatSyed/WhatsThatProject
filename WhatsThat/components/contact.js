@@ -1,4 +1,7 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable react/no-access-state-in-setstate */
+/* eslint-disable react/sort-comp */
+/* eslint-disable eqeqeq */
 /* eslint-disable max-len */
 /* eslint-disable no-sequences */
 /* eslint-disable no-unused-expressions */
@@ -9,11 +12,12 @@
 /* eslint-disable react/jsx-filename-extension */
 import React, { Component } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, FlatList, Image, ScrollView,
+  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, Image, ScrollView, Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getBlockedUsers, getUserContacts, getUserImage } from '../api/getRequests/getRequests';
-import { addFriend, blockUser } from '../api/postRequests/postRequests';
+import { blockUser } from '../api/postRequests/postRequests';
 import { removeFriend, unblockUser } from '../api/deleteRequests/deleteRequest';
 
 export default class ContactScreen extends Component {
@@ -23,13 +27,17 @@ export default class ContactScreen extends Component {
     this.state = {
       contactData: [],
       isLoading: true,
+      // eslint-disable-next-line react/no-unused-state
       blockList: [],
       newlyBlocked: [],
+      // eslint-disable-next-line react/no-unused-state
       imageUri: null,
-      newFriends: [],
+      showModal: false,
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
     };
 
-    this._onPressButton = this._onPressButton.bind(this);
+    // this.onPressButton = this.onPressButton.bind(this);
   }
 
   componentDidMount() {
@@ -45,6 +53,32 @@ export default class ContactScreen extends Component {
     this.unsubscribe();
   }
 
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
+
+  onModalDismiss = () => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
+    });
+  };
+
+  showModalWithMessage = (message) => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: message,
+      showModal: true,
+    });
+
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
+  };
+
   // eslint-disable-next-line react/sort-comp
   checkLoggedIn = async () => {
     const value = await AsyncStorage.getItem('userToken');
@@ -56,114 +90,90 @@ export default class ContactScreen extends Component {
   retrieveData = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
+
       // Do something with userToken and id
       // alert("running")
       getUserContacts(userToken, (contactData) => {
-        console.log(contactData);
         this.setState({ contactData, isLoading: false });
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('Unexpected Error', error);
     }
   };
-
-  getContacts() {
-    getUserContacts(userToken, (contactData) => {
-      console.log(contactData);
-    });
-  }
-
-  isBlocked(item) {
-    console.log('runrunrunblock');
-    return this.state.blockList.some((blockedUser) => blockedUser.user_id === item.user_id);
-  }
 
   isNewlyBlocked = (item) => this.state.newlyBlocked.some((newBlocked) => newBlocked.user_id === item.user_id);
 
   getBlockLists = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      const id = await AsyncStorage.getItem('userID');
-      this.currentID = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
+
       getBlockedUsers(userToken, (blockList) => {
-        console.log(blockList, 'blocccccccck');
+        // eslint-disable-next-line react/no-unused-state
         this.setState({ blockList, isLoading: false });
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('Unexpected Error', error);
     }
   };
 
   addToBlockList = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      // const id = await AsyncStorage.getItem('userID');
-      // console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
+
       blockUser(userToken, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
         // update contactData state with the new friend
         this.setState((prevState) => ({
-          // contactData: [...prevState.contactData, item],
+
           newlyBlocked: [...prevState.newlyBlocked, item], // add the new friend to the newFriends array
         }));
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
+          this.showModalWithMessage('400: You can not block yourself');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
         } else {
-          console.log('try again');
+          this.showModalWithMessage('oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
   removeFromBlockList = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      // const id = await AsyncStorage.getItem('userID');
-      // console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
+
       unblockUser(userToken, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
         // update newlyBlocked state by  unblocking user
         this.setState((prevState) => ({
-          // contactData: [...prevState.contactData, item],
+
           newlyBlocked: prevState.newlyBlocked.filter((blockedUser) => blockedUser.user_id !== item.user_id), // remove the item from the newlyBlocked array
         }));
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
-        } else {
-          console.log('try again');
+          this.showModalWithMessage('400: You can not block yourself ');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
-
-  _onPressButton() {
-    console.log('direct to chat or user profile');
-  }
 
   getImage = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
       getUserImage(userToken, item.user_id, (imageUri) => {
-        // console.log(item.user_id, 'the user id');
         // update the contactData state with the new imageUri for the current contact
         const updatedContactData = this.state.contactData.map((contact) => {
           if (contact.user_id === item.user_id) {
@@ -173,77 +183,38 @@ export default class ContactScreen extends Component {
         });
         this.setState({ contactData: updatedContactData });
       }, (error) => {
-        console.log(error);
-        if (error.message == '400') {
-          console.log('error 400');
-        } else {
-          console.log('try again');
+        if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
-    }
-  };
-
-  isFriend(item) {
-    return this.state.contactData.some((contact) => contact.user_id === item.user_id);
-  }
-
-  isNewFriend = (item) => this.state.newFriends.some((friend) => friend.user_id === item.user_id);
-
-  addAsFriend = async (item) => {
-    try {
-      const userToken = await AsyncStorage.getItem('userToken');
-      const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
-      addFriend(userToken, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
-        this.setState({ isLoading: false });
-        // update newFriends state with the new friend
-        this.setState((prevState) => ({
-          // contactData: [...prevState.contactData, item],
-          newFriends: [...prevState.newFriends, item], // add the new friend to the newFriends array
-        }));
-      }, (error) => {
-        console.log(error);
-        if (error.message == '400') {
-          console.log('error 400');
-        } else {
-          console.log('try again');
-        }
-      });
-    } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
   removeFromFriend = async (item) => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
-      const id = await AsyncStorage.getItem('userID');
-      console.log(userToken, id);
-      // Do something with userToken and id
-      // alert("running")
       removeFriend(userToken, item.user_id, () => {
-        console.log(item.user_id, 'the user id');
         this.setState({ isLoading: false });
-        // update newFriends state by  removing friend
-        this.setState((prevState) => ({
-          // contactData: [...prevState.contactData, item],
-          newFriends: prevState.newFriends.filter((friend) => friend.user_id !== item.user_id), // remove the item from the newFriends array
-        }));
+        this.retrieveData();
       }, (error) => {
-        console.log(error);
         if (error.message == '400') {
-          console.log('error 400');
-        } else {
-          console.log('try again');
+          this.showModalWithMessage('400: You can not block yourself ');
+        } else if (error.message == '404') {
+          this.showModalWithMessage('404: Not Found ');
+        } else if (error.message == '401') {
+          this.showModalWithMessage('401: Login Again ');
+        } else if (error.message == '500') {
+          this.showModalWithMessage('500: oops! Something went wrong');
         }
       });
     } catch (error) {
-      console.log(error);
+      this.showModalWithMessage('oops! Something went wrong');
     }
   };
 
@@ -297,6 +268,27 @@ export default class ContactScreen extends Component {
 
     return (
       <View style={styles.container}>
+        <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+          <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          >
+            <View style={{
+              backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, alignItems: 'center',
+            }}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 14 }}>{this.state.modalMessage}</Text>
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={{
+                  backgroundColor: '#F44336', padding: 10, marginTop: 10, borderRadius: 5,
+                }}
+              >
+                <Icon name="close" size={16} color="#FFFFFF" style={{ fontWeight: 'bold' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.headerContainer}>
           <Text style={styles.header}>Contacts</Text>
         </View>
@@ -370,10 +362,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
-  buttonText: {
-    color: '#fff',
-  },
-
+  // buttonText: {
+  //   color: '#fff',
+  // },
   buttonText: {
     fontSize: 14,
     fontWeight: 'bold',

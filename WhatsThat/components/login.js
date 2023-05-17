@@ -12,9 +12,10 @@
 /* eslint-disable react/jsx-filename-extension */
 import React, { Component } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as EmailValidator from 'email-validator';
 import { loginAPI } from '../api/postRequests/postRequests';
 
@@ -29,6 +30,9 @@ export default class LoginScreen extends Component {
       password: '',
       error: '',
       submitted: false,
+      showModal: false,
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
     };
 
     this.onPressButton = this.onPressButton.bind(this);
@@ -43,53 +47,6 @@ export default class LoginScreen extends Component {
   componentWillUnmount() {
     this.unsubscribe();
   }
-
-  /* login = () => {
-        // Validation here...
-        let toSend = {
-            email: this.state.email,
-            password: this.state.password
-        };
-
-        fetch("http://localhost:3333/api/1.0.0/login", {
-            method: "post",
-            headers: {
-            "Content-Type": "application/json",
-            },
-            body: JSON.stringify(toSend),
-        })
-        .then((response) => {
-            if (response.status === 200) {
-            console.log("User logged in: ", response);
-            alert("Login successful!");
-            // Save user token or other relevant data
-            // Navigate to dashboard or home screen
-            } else {
-            console.log("Login failed: ", response);
-            alert("Invalid email or password");
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-    } */
-
-  // async componentDidMount() {
-  //     try {
-  //       const response = await fetch("http://localhost:3333/api/1.0.0/user", {
-  //         method: "get",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`, // Include user token in headers for authentication
-  //         },
-  //       });
-  //       const data = await response.json();
-  //       console.log("User data retrieved: ", data);
-  //       // Set user data in state or do other operations with it
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   }
 
   onPressButton() {
     this.setState({ submitted: true });
@@ -108,23 +65,43 @@ export default class LoginScreen extends Component {
     const PASSWORD_REGEX = new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$');
     if (!PASSWORD_REGEX.test(this.state.password)) {
       this.setState({ error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)" });
-      return;
     }
-
-    console.log(`Button clicked: ${this.state.email} ${this.state.password}`);
-    console.log('Validated and ready to send to the API');
   }
+
+  toggleModal = () => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+    }));
+  };
+
+  onModalDismiss = () => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: '',
+    });
+  };
+
+  showModalWithMessage = (message) => {
+    this.setState({
+      // eslint-disable-next-line react/no-unused-state
+      modalMessage: message,
+      showModal: true,
+    });
+
+    setTimeout(() => {
+      this.onModalDismiss();
+      this.toggleModal();
+    }, 3000);
+  };
 
   login = () => {
     loginAPI(this.state.email, this.state.password, () => {
-      console.log('navigate to homescreen');
       this.props.navigation.navigate('HomeScreen');
     }, (error) => {
-      console.log(error);
       if (error.message == '400') {
-        console.log('error 400');
+        this.showModalWithMessage('Invalid password or Email');
       } else {
-        console.log('try again');
+        this.showModalWithMessage('Server Error');
       }
     });
   };
@@ -146,7 +123,31 @@ export default class LoginScreen extends Component {
     return (
       <View style={styles.container}>
 
+        <Modal visible={this.state.showModal} animationType="slide" onDismiss={this.onModalDismiss} transparent>
+          <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          >
+            <View style={{
+              backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, alignItems: 'center',
+            }}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 14 }}>{this.state.modalMessage}</Text>
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={{
+                  backgroundColor: '#F44336', padding: 10, marginTop: 10, borderRadius: 5,
+                }}
+              >
+                <Icon name="close" size={16} color="#FFFFFF" style={{ fontWeight: 'bold' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <View style={styles.formContainer}>
+
+          <Text style={styles.loginTitle}>Hi! Login To Your Account</Text>
+
           <View style={styles.email}>
             <Text>Email:</Text>
             <TextInput
@@ -196,7 +197,7 @@ export default class LoginScreen extends Component {
               onPress={() => this.props.navigation.navigate('SignupScreen')}
             >
 
-              <Text style={styles.signup}>Need an account?</Text>
+              <Text style={styles.signup}>Need an account? click here</Text>
 
             </TouchableOpacity>
           </View>
@@ -219,6 +220,11 @@ const styles = StyleSheet.create({
   formContainer: {
 
   },
+  loginTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
   email: {
     marginBottom: 5,
   },
@@ -232,10 +238,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     textDecorationLine: 'underline',
     paddingTop: 0,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   button: {
-    marginBottom: 30,
+    marginBottom: 15,
     backgroundColor: '#2196F3',
+    borderRadius: 10,
   },
   buttonText: {
     textAlign: 'center',
