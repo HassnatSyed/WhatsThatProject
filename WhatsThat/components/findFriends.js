@@ -53,6 +53,7 @@ export default class FindFriends extends Component {
 
   componentWillUnmount() {
     this.unsubscribe();
+    this.setState({ newFriends: [], blockList: [] });
   }
 
   checkLoggedIn = async () => {
@@ -100,6 +101,7 @@ export default class FindFriends extends Component {
 
   findUsers = async () => {
     try {
+      this.setState({ searchResults: [], offset: 0 });
       const userToken = await AsyncStorage.getItem('userToken');
       // eslint-disable-next-line no-unused-vars
       const id = await AsyncStorage.getItem('userID');

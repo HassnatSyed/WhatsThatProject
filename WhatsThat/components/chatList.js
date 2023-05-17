@@ -42,6 +42,7 @@ export default class ChatList extends Component {
     this.unsubscribe = this.props.navigation.addListener('focus', () => {
       this.checkLoggedIn();
       this.getUserChatList();
+      this.setState({ isLoading: false });
     });
   }
 
